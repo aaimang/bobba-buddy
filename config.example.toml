@@ -1,0 +1,114 @@
+# Copy to config.toml. The bot re-reads this file when it changes (within ~2s);
+# a bad edit is reported in the G-Earth console and the previous settings stay active.
+# `workers` and `max_pending` only change on restart.
+
+# Habbo names allowed to use the bot (case-insensitive). You (the logged-in
+# account) are always allowed.
+whitelist = ["Friend1", "Friend2"]
+
+[claude]
+model = "claude-haiku-5-5"
+effort = "low"                # low | medium | high | xhigh | max
+max_tokens = 4096             # covers thinking + web search + the short answer
+timeout_s = 45
+max_retries = 2
+web_search_max_uses = 2       # per /q; each search costs $0.01
+
+[limits]
+workers = 2                   # Claude calls running at once
+max_pending = 5               # queued + running; beyond this people get "busy"
+daily_budget_usd = 1.00       # 0 = no cap; resets at local midnight
+max_input_chars = 300
+
+[chat]
+bubble_limit = 100            # Habbo's hard cap per bubble
+send_interval_s = 2.0         # gap between bubbles, to avoid flood mutes
+flood_margin_s = 2            # extra wait after a FloodControl mute
+bubble_style = -1             # -1 = reuse your own chat bubble style
+require_seen_packets = false  # false: always reply, G-Earth decides (see README: packet safety)
+
+[memory]                      # /q follow-ups
+max_turns = 6
+ttl_s = 600
+
+[pricing]                     # USD, used for the daily budget (Haiku 5.5, prompts <= 100K)
+input_per_mtok = 0.10
+output_per_mtok = 0.50
+per_search = 0.01
+
+[room]
+room_reload_packet = "GetHeightMap"   # sent on connect only if G-Earth knows the name
+rejoin_on_start = false        # after a bot restart, re-enter the last room you were in
+rejoin_delay_s = 3            # wait this long first; skipped if a room loads by itself
+return_on_exit = false         # if you end up on the hotel view, go back to the last room
+return_delay_s = 5            # wait this long first (longer on each retry)
+return_max_attempts = 3       # give up after this many tries in a row (kick, ban, doorbell)
+
+# Avatar behaviour. G-Earth only lets the bot send actions it has seen you do this
+# session, so after connecting: walk, sit, dance, wave and hold up a sign once by hand.
+# The G-Earth console tells you if something is still locked.
+[avatar]
+# Autopilot: every autopilot_min_s..autopilot_max_s seconds, walk / sit-or-stand / dance.
+autopilot = true
+autopilot_min_s = 30
+autopilot_max_s = 90
+walk_radius = 5               # tiles from where you stand; 0 = anywhere (never the door)
+walk_weight = 5               # how often each action is picked, relative to the others
+sit_weight = 2
+dance_weight = 2
+expression_weight = 2         # wave / thumbs up (+ blow kiss, laugh, jump if hc_expressions)
+hc_expressions = false        # true if you have Habbo Club (blow kiss, laugh, jump)
+wave_on_walk = true           # wave each time the autopilot walks to another tile
+sign_weight = 1               # hold up a random sign (0-17)
+look_weight = 2               # turn to face a random direction
+hc_dances = false             # true if you have Habbo Club (dances 2-4)
+
+# Copy players standing within mimic_radius tiles (1 = the 8 tiles around you).
+mimic = true
+mimic_radius = 1
+mimic_dance = true
+mimic_expressions = true      # wave, laugh, blow kiss, thumbs up...
+mimic_signs = true
+mimic_posture = true          # sit / stand
+mimic_pause_s = 30            # autopilot waits this long after copying someone
+
+# Anti-idle: blocks your client's "I'm idle" report, and if the server still shows Zzz,
+# wakes you with the first of these that G-Earth allows.
+anti_idle = true
+wake_actions = ["wave", "walk", "look"]
+
+owner_pause_s = 60            # autopilot waits this long after you move/act yourself
+action_gap_s = 1.5            # minimum seconds between any two avatar actions
+require_seen_packets = false  # false: always act, G-Earth decides (see README: packet safety)
+
+[commands.q]
+enabled = true
+prefix = "/q"
+cooldown_s = 15
+web_search = true
+max_chars = 250
+max_bubbles = 3
+
+[commands.roast]
+enabled = true
+prefix = "/roast"
+cooldown_s = 15
+target_cooldown_s = 60        # same person can't be roasted again for 60s
+opt_out = []                  # names that are never roasted
+max_chars = 150
+max_bubbles = 2
+
+[commands.suggest]
+enabled = true
+prefix = "/suggest"
+cooldown_s = 15
+web_search = false
+max_chars = 250
+max_bubbles = 3
+
+[commands.joke]
+enabled = true
+prefix = "/joke"
+cooldown_s = 15
+max_chars = 200
+max_bubbles = 2

@@ -1,0 +1,51 @@
+[project]
+name = "habbo-ask-bot"
+version = "1.0.0"
+description = "G-Earth extension: Habbo chat commands answered by Claude, plus avatar autopilot, copying and anti-idle"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # 0.1.6 is the last working release; GitHub main has a circular import.
+    "g-python==0.1.6",
+    "anthropic>=1.8,<2",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+habbo-ask-bot = "habbo_ask_bot.__main__:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+docs = [
+    "sphinx>=8",
+    "myst-parser>=4",  # include the Markdown guides in docs/
+    "furo",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/habbo_ask_bot"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::SyntaxWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"  # docstrings are read by Sphinx's napoleon extension (docs/sphinx)
+
+[tool.ruff.lint.per-file-ignores]
+# Test functions and test classes are named for what they check.
+"tests/test_*.py" = ["D101", "D102", "D103"]
