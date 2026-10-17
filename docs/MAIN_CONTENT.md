@@ -43,12 +43,14 @@ The project uses [semantic versioning](https://semver.org): `MAJOR.MINOR.PATCH`,
 - **MINOR** (`1.1.0`): new commands, avatar actions or config options; existing `config.toml` files keep working.
 - **MAJOR** (`2.0.0`): changes that break existing `config.toml` files, such as renamed sections or keys.
 
-| Tag | Contents |
+Each version below has a git tag (`v1.2.2` and so on), except 1.1.1 and 1.1.2: their changes are in the history but the tags were removed, so they ship as part of `v1.2.0`. Only `v1.2.2` has a GitHub Release.
+
+| Version | Contents |
 |---|---|
 | `v1.2.2` | New tagline: "Bobba Buddy: a hotel sidekick for G-Earth" (README and docs home page). |
 | `v1.2.1` | `install_gearth.py` finds G-Earth by itself on Windows and Linux: from the running G-Earth, else by a quick search of Downloads, Desktop, Documents and home. `--gearth-dir` is now only a fallback. |
 | `v1.2.0` | Runs on **macOS, Windows and Linux**. `install_gearth.py` takes `--gearth-dir` (G-Earth's folder or `G-Earth.jar`) on Windows and Linux and uses the right virtualenv Python per OS. State and dump files are always UTF-8. A test workflow runs lint and the tests on all three systems. README has Windows (PowerShell) setup. |
-| `v1.1.2` | Docs published to GitHub Pages (https://aaimang.github.io/bobba-buddy/) by a GitHub Actions workflow, `.github/workflows/docs.yml`, on every push to `main`. |
-| `v1.1.1` | Sphinx docs switched from Furo to the [Shibuya](https://shibuya.lepture.com) theme with a Habbo-yellow accent. Logo (a Habbo avatar made with the HabboQuests imager) in the README and docs, and an unofficial-fan-project disclaimer in the README and on every docs page. |
+| `1.1.2` (not tagged) | Docs published to GitHub Pages (https://aaimang.github.io/bobba-buddy/) by a GitHub Actions workflow, `.github/workflows/docs.yml`, on every push to `main`. |
+| `1.1.1` (not tagged) | Sphinx docs switched from Furo to the [Shibuya](https://shibuya.lepture.com) theme with a Habbo-yellow accent. Logo (a Habbo avatar made with the HabboQuests imager) in the README and docs, and an unofficial-fan-project disclaimer in the README and on every docs page. |
 | `v1.1.0` | Renamed to **Bobba Buddy**: package `bobba_buddy` (run with `python -m bobba_buddy`), class `BobbaBuddy`, G-Earth title "Bobba Buddy", log file `logs/bobba-buddy.log`, project folder `bobba-buddy`. `config.toml` is unchanged. |
 | `v1.0.0` | First release. Chat commands `/q`, `/roast`, `/suggest`, `/joke`, with whitelist, cooldowns, a daily budget and per-user `/q` memory. Avatar copying, autopilot and anti-idle. Room rejoin and return. Live-client packet fixes, the cost report, the G-Earth installer, these docs and the Sphinx API reference. |
