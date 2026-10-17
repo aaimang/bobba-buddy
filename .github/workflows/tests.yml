@@ -1,9 +1,11 @@
-# Runs lint and the offline test suite on macOS, Windows and Linux on every push and
-# pull request, so the bot keeps working on every OS G-Earth supports.
+# Runs lint and the offline test suite on macOS, Windows and Linux on every branch push
+# and pull request, so the bot keeps working on every OS G-Earth supports. Tag pushes
+# are left out: a tag points at a commit its branch push already tested.
 name: Tests
 
 on:
   push:
+    branches: ["**"]
   pull_request:
   workflow_dispatch:
 
