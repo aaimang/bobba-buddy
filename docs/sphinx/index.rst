@@ -5,6 +5,7 @@ A G-Earth extension in Python for the Habbo AIR client. It answers whitelisted c
 commands with Claude, and gives the logged-in avatar a life of its own: copying nearby
 players, a random autopilot, anti-idle, and returning to the last room.
 
+* **Settings window** shows every page of the window G-Earth's ▶ button opens.
 * **Guides** explain how the bot works, the Habbo packets it uses, and the problems
   found along the way. They're the same Markdown files as in ``docs/``.
 * **Package reference** and **Scripts** are generated from the code's Google-style
@@ -15,6 +16,7 @@ players, a random autopilot, anti-idle, and returning to the last room.
    :caption: Guides
 
    guides/MAIN_CONTENT
+   guides/09-settings-window
    guides/01-how-the-bot-works
    guides/02-codebase-guide
    guides/03-packet-reference

@@ -124,12 +124,24 @@ By default the bot always tries to send and lets G-Earth decide. Set `require_se
 
 Press **▶** next to Bobba Buddy in G-Earth's Extensions tab. A Habbo-style window opens:
 
+<p align="center">
+  <img src="docs/images/settings-commands.png" alt="Bobba Buddy settings window, Commands page: ON/OFF switches, a prefix box and −/+ number steppers for /q" width="720">
+</p>
+
 - **BOT ON / OFF** in the yellow header pauses everything: chat commands, copying, autopilot and anti-idle. The header also shows who you're connected as and today's spend.
 - **Pages** for the whitelist, commands, avatar, room, Claude, budget and advanced settings. Every option in `config.toml` is there as a switch, a −/+ number or a text box.
 - **Save** checks the settings and writes `config.toml`, keeping your comments, and the bot applies them straight away. A bad value turns its setting red and nothing is written. **Revert** puts back what's saved.
 - **About** has the version and the GitHub and docs links.
 
-Pressing ▶ again brings the open window to the front. Editing `config.toml` by hand still works, and an open window picks up outside edits. To try the window without G-Earth:
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/settings-avatar.png" alt="Avatar page: autopilot switches, waits and walk radius" width="260"><br><sub>Avatar</sub></td>
+    <td align="center"><img src="docs/images/settings-claude.png" alt="Claude page: model, thinking effort choice and limits" width="260"><br><sub>Claude</sub></td>
+    <td align="center"><img src="docs/images/settings-about.png" alt="About page: logo, version, GitHub and docs buttons" width="260"><br><sub>About</sub></td>
+  </tr>
+</table>
+
+Every page is shown in the [Settings window guide](docs/09-settings-window.md). Pressing ▶ again brings the open window to the front. Editing `config.toml` by hand still works, and an open window picks up outside edits. To try the window without G-Earth:
 
 ```bash
 uv run python -m bobba_buddy.settings

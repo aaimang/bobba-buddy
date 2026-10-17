@@ -14,6 +14,7 @@ Documentation for the Habbo AIR chat and avatar bot that runs as a G-Earth exten
 | 6 | [G-Earth requirements](06-gearth-requirements.md) | G-Earth versions, packet safety and Developer mode, the extension protocol, running Python and Java extensions |
 | 7 | [Bugs and fixes](07-bugs-and-fixes.md) | Every problem hit while building this bot, its cause, the workaround and the fix |
 | 8 | [Sources and repositories](08-sources-and-repos.md) | The GitHub repos, files and APIs used to learn G-Python, G-Earth, G-Rust and the packet layouts |
+| 9 | [Settings window](09-settings-window.md) | A tour of the window G-Earth's ▶ button opens, with screenshots of every page; saving, errors and platform notes |
 
 **API reference (Sphinx).** `docs/sphinx/` builds an HTML site that combines these guides with a reference generated from the code's Google-style docstrings. To build it:
 
@@ -26,7 +27,7 @@ Then open `docs/sphinx/_build/html/index.html`. The published copy is at https:/
 ## Quick links
 
 - **I want to…**
-  - change a setting → [Codebase guide § Configuration](02-codebase-guide.md#configuration)
+  - change a setting → [Settings window](09-settings-window.md), or [Codebase guide § Configuration](02-codebase-guide.md#configuration) for the file itself
   - change how the bot talks → [Codebase guide § Prompts](02-codebase-guide.md#prompts-and-tone)
   - send a packet by hand → [Reading packets § G-Earth expressions](05-reading-packets.md#g-earth-packet-expressions)
   - add a new avatar action → [Codebase guide § Adding an avatar action](02-codebase-guide.md#adding-an-avatar-action)
