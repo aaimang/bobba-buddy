@@ -166,3 +166,13 @@ def test_run_window_closes_when_done(root, config, monkeypatch):
         run_window(FakeBridge(), config, EXAMPLE, lambda: True, queue.Queue())
     except tk.TclError:
         pytest.skip("no display")
+
+
+def test_window_opens_without_a_logo(root, config, monkeypatch):
+    def broken(*args, **kwargs):
+        raise tk.TclError("")
+
+    monkeypatch.setattr(window_mod.tk, "PhotoImage", broken)
+    w = SettingsWindow(root, FakeBridge(), config, EXAMPLE)
+    assert w._logo is None
+    w.show_page(ABOUT)

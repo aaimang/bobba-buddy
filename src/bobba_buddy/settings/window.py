@@ -12,6 +12,7 @@ Attributes:
 
 from __future__ import annotations
 
+import base64
 import logging
 import queue
 import re
@@ -45,6 +46,33 @@ log = logging.getLogger(__name__)
 LOGO_PATH = Path(__file__).resolve().parent.parent / "assets" / "logo.png"
 ABOUT = "About"
 _ERROR_KEY = re.compile(r"\[([\w.]+)\] (\w+)")
+
+
+def load_logo(root: tk.Misc) -> tk.PhotoImage | None:
+    """The logo as a Tk image, or ``None`` if Tk can't create it.
+
+    The PNG is read here and handed to Tk as data, so Tcl never opens the file. On
+    Windows, creating an image occasionally fails with an empty ``TclError`` (seen in
+    CI after several windows in one process); one retry, then the window goes on
+    without the logo rather than not opening.
+
+    Args:
+        root: The Tk root.
+
+    Returns:
+        The image, or ``None``.
+    """
+    try:
+        data = base64.b64encode(LOGO_PATH.read_bytes())
+    except OSError:
+        log.warning("logo not found at %s", LOGO_PATH)
+        return None
+    for attempt in (1, 2):
+        try:
+            return tk.PhotoImage(master=root, data=data)
+        except tk.TclError as exc:
+            log.warning("couldn't load the logo (attempt %d): %r", attempt, exc)
+    return None
 
 
 def _same(a: Any, b: Any) -> bool:
@@ -115,9 +143,12 @@ class SettingsWindow:
         root.configure(bg=t.PANEL)
         root.geometry(f"{th.px(820)}x{th.px(620)}")
         root.minsize(th.px(680), th.px(460))
-        self._logo = tk.PhotoImage(master=root, file=str(LOGO_PATH))
-        self._logo_small = self._logo.subsample(2) if th.scale < 1.75 else self._logo
-        root.iconphoto(True, self._logo)
+        self._logo = load_logo(root)
+        self._logo_small = self._logo
+        if self._logo is not None:
+            if th.scale < 1.75:
+                self._logo_small = self._logo.subsample(2)
+            root.iconphoto(True, self._logo)
 
         self._build_header()
         self._build_footer()
@@ -148,7 +179,8 @@ class SettingsWindow:
         header = tk.Frame(self.root, bg=t.YELLOW, padx=th.px(10), pady=th.px(4))
         header.pack(fill="x")
         tk.Frame(self.root, bg=t.BLACK, height=th.px(2)).pack(fill="x")
-        tk.Label(header, image=self._logo_small, bg=t.YELLOW).pack(side="left")
+        if self._logo_small is not None:
+            tk.Label(header, image=self._logo_small, bg=t.YELLOW).pack(side="left")
         titles = tk.Frame(header, bg=t.YELLOW)
         titles.pack(side="left", padx=th.px(10), fill="x", expand=True)
         tk.Label(
@@ -283,7 +315,8 @@ class SettingsWindow:
         box.pack(fill="x", padx=(0, th.px(10)))
         inner = tk.Frame(box.body, bg=t.WHITE, padx=th.px(14), pady=th.px(14))
         inner.pack(fill="x")
-        tk.Label(inner, image=self._logo, bg=t.WHITE).pack(side="left", anchor="n")
+        if self._logo is not None:
+            tk.Label(inner, image=self._logo, bg=t.WHITE).pack(side="left", anchor="n")
         text = tk.Frame(inner, bg=t.WHITE)
         text.pack(side="left", fill="x", expand=True, padx=(th.px(16), 0))
 
