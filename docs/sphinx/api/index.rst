@@ -23,3 +23,11 @@ Generated from the Google-style docstrings in ``src/bobba_buddy``.
    bobba_buddy.config
    bobba_buddy.guard
    bobba_buddy.gpython
+   bobba_buddy.settings
+   bobba_buddy.settings.host
+   bobba_buddy.settings.window
+   bobba_buddy.settings.widgets
+   bobba_buddy.settings.schema
+   bobba_buddy.settings.configfile
+   bobba_buddy.settings.theme
+   bobba_buddy.settings.__main__

@@ -72,7 +72,7 @@ uv run python -m bobba_buddy -p 9092
 - Use the port shown in G-Earth's Extensions tab.
 - G-Earth asks you to allow the connection; click allow.
 - If G-Earth restarts, the bot reconnects on its own. Ctrl-C stops it.
-- Double-clicking the extension in G-Earth turns everything on and off.
+- Press ▶ next to Bobba Buddy in G-Earth's Extensions tab to open the [settings window](#settings-window), which also has the bot's ON/OFF switch.
 
 The same command works in PowerShell on Windows.
 
@@ -101,7 +101,7 @@ Restart G-Earth and "Bobba Buddy" appears in the Extensions tab. Add `--dry-run`
 
 | You changed… | Restart the bot? | Re-enter the room? |
 |---|---|---|
-| `config.toml` | No: applies within ~2 s (except `workers` and `max_pending`) | No |
+| `config.toml` (by hand or in the settings window) | No: applies within ~2 s, at once from the window (except `workers` and `max_pending`) | No |
 | The bot's code (an update) | Yes: Ctrl-C, then run it again | Only if `rejoin_on_start = false` |
 
 After a restart, the bot needs the room's user list and floor map. With `rejoin_on_start = true` it re-enters your last room itself. Otherwise, leave and re-enter the room once (your own commands work without it). The bot can't just ask the server to resend the room: the packet for that (`GetHeightMap`) doesn't exist in the current AIR client.
@@ -120,9 +120,26 @@ G-Earth refuses to send a packet from an extension unless it has already seen yo
 
 By default the bot always tries to send and lets G-Earth decide. Set `require_seen_packets = true` (under `[chat]` and/or `[avatar]`) to make it wait until it has seen you do an action. That avoids G-Earth's log warnings, and shout replies then fall back to chat.
 
+## Settings window
+
+Press **▶** next to Bobba Buddy in G-Earth's Extensions tab. A Habbo-style window opens:
+
+- **BOT ON / OFF** in the yellow header pauses everything: chat commands, copying, autopilot and anti-idle. The header also shows who you're connected as and today's spend.
+- **Pages** for the whitelist, commands, avatar, room, Claude, budget and advanced settings. Every option in `config.toml` is there as a switch, a −/+ number or a text box.
+- **Save** checks the settings and writes `config.toml`, keeping your comments, and the bot applies them straight away. A bad value turns its setting red and nothing is written. **Revert** puts back what's saved.
+- **About** has the version and the GitHub and docs links.
+
+Pressing ▶ again brings the open window to the front. Editing `config.toml` by hand still works, and an open window picks up outside edits. To try the window without G-Earth:
+
+```bash
+uv run python -m bobba_buddy.settings
+```
+
+**Linux:** the window needs Tkinter (`sudo apt install python3-tk` on Debian and Ubuntu). Without it the bot runs normally and says so in the G-Earth console. The python.org installers and uv's own Python builds already include it.
+
 ## Configuration (`config.toml`)
 
-Changes are picked up within about 2 seconds. If an edit is invalid, the error shows in the G-Earth console and the previous settings stay active. Every option is commented in `config.example.toml`. The ones you'll most likely change:
+The [settings window](#settings-window) edits this file for you. Changes are picked up within about 2 seconds. If an edit is invalid, the error shows in the G-Earth console and the previous settings stay active. Every option is commented in `config.example.toml`. The ones you'll most likely change:
 
 - **`whitelist`:** who can use the chat commands. Names are case-insensitive. You are always allowed.
 - **`[commands.<name>]`:** per-command `enabled`, `prefix`, `cooldown_s`, `max_chars`, `max_bubbles`, and `web_search` (for `q`/`suggest`).
@@ -183,7 +200,7 @@ Two options under `[room]` keep you in your room:
   - Moving to another room doesn't trigger it, because the new room loads before the wait ends.
   - It tries at most `return_max_attempts` (3) times in a row, waiting longer each time, then stays out. That covers kicks, bans, and doorbell or password rooms.
   - Staying in the room for a minute resets the count.
-  - To go to the hotel view on purpose, double-click the extension in G-Earth (bot OFF) first, or set `return_on_exit = false`.
+  - To go to the hotel view on purpose, switch the bot OFF in the settings window first, or set `return_on_exit = false`.
 
 Both use the same request the navigator sends when you click a room. The last room is saved in `state/last_room.json`. Habbo has no way to ask "which room am I in?", so the bot can only go back to rooms it has seen you enter. If you changed rooms while the bot was stopped, it takes you back to the last one it saw.
 
@@ -215,7 +232,7 @@ Habbo client ⇄ G-Earth ⇄ (socket) ⇄ this extension
                                   └─ room keeper: RoomReady → state/last_room.json; restart / CloseConnection → GetGuestRoom
 ```
 
-- **Threading.** G-Python runs every packet callback on a single thread, and G-Earth holds each packet until the callback finishes. A slow callback would freeze the game, and a crash would stop packets entirely. So callbacks only parse and queue, wrapped in `guarded`. Claude calls, chat replies and avatar actions each run on their own threads.
+- **Threading.** G-Python runs every packet callback on a single thread, and G-Earth holds each packet until the callback finishes. A slow callback would freeze the game, and a crash would stop packets entirely. So callbacks only parse and queue, wrapped in `guarded`. Claude calls, chat replies and avatar actions each run on their own threads, and the main thread hosts the settings window (Tk has to run there on macOS).
 - **Packet layouts** follow [G-Realm/G-Rust](https://github.com/G-Realm/G-Rust/tree/main/src/extension/parsers), with fixes for the current AIR client (seen on `MAC63-202610131318`). Packets are always addressed by name, because header ids differ between the Windows and macOS AIR builds.
   - **`UserUpdate`** entries have an extra int after the two directions.
   - **`Users`** player entries end with an extra int.
@@ -234,7 +251,7 @@ uv run --group docs sphinx-build -b html docs/sphinx docs/sphinx/_build/html   #
 
 Logs go to `logs/bobba-buddy.log` (rotating, about 6 MB kept).
 
-**Versioning.** Current version: **1.2.3**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.3.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 
@@ -243,12 +260,12 @@ Logs go to `logs/bobba-buddy.log` (rotating, about 6 MB kept).
 | Replies or avatar actions don't show up; G-Earth logs "attempted to send an unsafe packet" | Turn on Developer mode (Extra tab), or do that action once by hand. See [Developer mode](#developer-mode-g-earth-packet-safety). |
 | Console: "Re-enter the room" | The bot doesn't have the user list. Turn on `rejoin_on_start`, or leave and re-enter the room. |
 | Console: "No saved room to rejoin yet" | Enter a room once with the bot running; it's remembered from then on. |
-| It keeps taking me back to a room | That's `return_on_exit`. Turn the bot OFF (double-click) before leaving on purpose, or set it to `false`. |
+| It keeps taking me back to a room | That's `return_on_exit`. Switch the bot OFF in the settings window (▶ in G-Earth) before leaving on purpose, or set it to `false`. |
 | Copying or autopilot does nothing | The bot needs your user list and floor map, so check that the room loaded after the bot started (see above). Copying only reacts to players within 1 tile. |
 | Blow kiss / laugh / jump / dances 2–4 don't happen | They need Habbo Club. Leave `hc_expressions` / `hc_dances` off without HC. |
 | Console: "say anything in chat once", "…once by hand", "Autopilot is waiting" | Only with `require_seen_packets = true`. Do the action once by hand, or set it to `false` and use Developer mode. |
 | Console: "Unknown packet names…" | G-Earth's packet info for this client version is missing. Update G-Earth. |
-| Console: "Claude API error, bot paused" | Fix the API key or model in `.env`/`config.toml`, then double-click the extension. |
+| Console: "Claude API error, bot paused" | Fix the API key or model in `.env`/`config.toml`, then press ▶ in G-Earth and switch the bot back ON. |
 | A file appears in `logs/bad-packets/` | Habbo changed a packet layout. The bot keeps working around it; share the file to get the parser updated. |
 | G-Earth runs but no window opens (even after restarting) | A hidden `.DS_Store` file in G-Earth's `Extensions` folder. Finder creates it when you open the folder, and G-Earth crashes trying to start it as an extension. The installer now removes it; run `uv run python scripts/install_gearth.py` again, or delete it by hand: `rm "$HOME/Library/Application Support/G-Earth/Extensions/.DS_Store"`. See [Bugs and fixes](docs/07-bugs-and-fixes.md#22-g-earth-runs-but-its-window-never-opens). |
-| Nothing happens at all | Check that the name is in `whitelist`, that the bot is ON (double-click toggles it), and look in `logs/bobba-buddy.log`. |
+| Nothing happens at all | Check that the name is in `whitelist`, that the bot is ON (the switch in the settings window, ▶ in G-Earth), and look in `logs/bobba-buddy.log`. |

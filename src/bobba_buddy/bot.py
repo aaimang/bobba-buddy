@@ -8,8 +8,8 @@ inside :func:`~bobba_buddy.guard.guarded`, and Claude calls run on a worker pool
 Attributes:
     EXTENSION_INFO (dict[str, str]): Title, description, version and author shown in
         G-Earth's Extensions tab.
-    EXTENSION_SETTINGS (dict[str, bool]): G-Python extension flags (double-click
-        trigger on, can be left and deleted).
+    EXTENSION_SETTINGS (dict[str, bool]): G-Python extension flags (the ▶ button opens
+        the settings window; can be left and deleted).
     REQUIRED_PACKETS (dict[Direction, tuple[str, ...]]): Packet names the chat features
         need; missing ones are reported on connect.
     META_COOLDOWN_S (float): Cooldown for usage and reset replies.
@@ -129,9 +129,9 @@ class BobbaBuddy:
         memory: ``/q`` conversation memory.
         outbox: Paced chat sender.
         avatar: Copying, autopilot and anti-idle.
-        enabled: Whether the bot is on (double-click in G-Earth toggles it).
+        enabled: Whether the bot is on (the switch in the settings window).
         fatal_error: Set when the API rejects the key or model; the bot pauses until
-            toggled.
+            switched back on.
         STAY_RESETS_ATTEMPTS_S: Staying in a room this long resets the
             ``return_on_exit`` attempt count.
     """
@@ -148,6 +148,7 @@ class BobbaBuddy:
         clock: Callable[[], float] = time.monotonic,
         rng: random.Random | None = None,
         last_room_path: Path | None = None,
+        open_settings: Callable[[], None] | None = None,
     ) -> None:
         """Create the bot; call :meth:`install` then :meth:`start`.
 
@@ -163,8 +164,11 @@ class BobbaBuddy:
             rng: Random source for the avatar; injectable for tests.
             last_room_path: Where the last room id is saved for rejoining; ``None``
                 disables saving.
+            open_settings: Opens the settings window (G-Earth's ▶ button); ``None``
+                prints a notice instead.
         """
         self._ext = ext
+        self._open_settings = open_settings
         self._last_room_path = last_room_path
         self._rejoin_timer: threading.Timer | None = None
         self._return_timer: threading.Timer | None = None
@@ -230,7 +234,7 @@ class BobbaBuddy:
         self.avatar.install()
         self._ext.on_event("connection_start", guarded(self._on_connection_start))
         self._ext.on_event("connection_end", guarded(self._on_connection_end))
-        self._ext.on_event("double_click", guarded(self.toggle))
+        self._ext.on_event("double_click", guarded(self.open_settings))
 
     def start(self, *, avatar_thread: bool = True) -> None:
         """Start the outbox and (optionally) the avatar worker.
@@ -278,12 +282,38 @@ class BobbaBuddy:
             self._notified.add(key)
             self.notice(text, color)
 
-    def toggle(self) -> None:
-        """Turn the bot on or off (double-click); turning on clears a fatal error."""
-        self.enabled = not self.enabled
-        if self.enabled:
+    def open_settings(self) -> None:
+        """G-Earth's ▶ button: ask the main thread to open the settings window."""
+        if self._open_settings is None:
+            self.notice("The settings window isn't available here.", "orange")
+            return
+        self._open_settings()
+
+    def set_enabled(self, on: bool) -> None:
+        """Turn the bot on or off; turning on clears a fatal error.
+
+        Args:
+            on: ``True`` to turn the bot on.
+        """
+        self.enabled = on
+        if on:
             self.fatal_error = None
-        self.notice(f"Bot {'ON' if self.enabled else 'OFF'}", "green" if self.enabled else "red")
+        self.notice(f"Bot {'ON' if on else 'OFF'}", "green" if on else "red")
+
+    def status(self) -> dict[str, Any]:
+        """A snapshot for the settings window's header.
+
+        Returns:
+            ``enabled``, ``fatal_error``, ``own_name`` (``None`` until the hotel
+            connects), ``spent_usd`` today and ``budget_usd`` (0 = no cap).
+        """
+        return {
+            "enabled": self.enabled,
+            "fatal_error": self.fatal_error,
+            "own_name": self.room.own_name,
+            "spent_usd": self._budget.spent_today,
+            "budget_usd": self._config().limits.daily_budget_usd,
+        }
 
     # --- session and room events ---------------------------------------------------
 
@@ -599,8 +629,8 @@ class BobbaBuddy:
         if self.fatal_error:
             self.notice_once(
                 "fatal",
-                f"Bot paused: {self.fatal_error}. Fix it, then "
-                "double-click the extension to resume.",
+                f"Bot paused: {self.fatal_error}. Fix it, then press ▶ in G-Earth "
+                "and switch the bot back ON.",
                 "red",
             )
             return
@@ -752,7 +782,7 @@ class BobbaBuddy:
                 self.fatal_error = reply.error or "Claude API rejected the request"
                 self.notice(
                     f"Claude API error, bot paused: {self.fatal_error}. Fix the key or "
-                    "model, then double-click the extension to resume.",
+                    "model, then press ▶ in G-Earth and switch the bot back ON.",
                     "red",
                 )
             else:

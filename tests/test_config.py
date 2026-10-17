@@ -87,3 +87,13 @@ def test_hot_reload(tmp_path):
 def test_missing_file(tmp_path):
     with pytest.raises(ConfigError, match="not found"):
         load_config(tmp_path / "nope.toml")
+
+
+def test_reload_now_skips_the_wait(tmp_path):
+    path = tmp_path / "config.toml"
+    path.write_text('whitelist = ["Ali"]\n')
+    store = ConfigStore(path, check_interval_s=60.0, clock=lambda: 0.0)
+    path.write_text('whitelist = ["Bob"]\n')
+    os.utime(path, (5, 5))
+    assert store.get().whitelist == {"ali"}  # next check is a minute away
+    assert store.reload_now().whitelist == {"bob"}

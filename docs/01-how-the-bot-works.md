@@ -86,7 +86,8 @@ G-Python runs **every packet callback on a single thread**, and G-Earth **holds 
 |---|---|---|
 | G-Python reader | `Extension.start()` | Reads G-Earth's socket |
 | G-Python packet thread | `Extension.start()` | Runs every intercept callback, one by one |
-| G-Python event threads | each event | `connection_start`, `connection_end`, `double_click` callbacks |
+| main thread | `__main__.run_session()` | Waits for the session to end; opens the settings window when ▶ is pressed (`SettingsHost.serve`) |
+| G-Python event threads | each event | `connection_start`, `connection_end`, `double_click` (▶) callbacks |
 | `buddy-worker-N` | `ThreadPoolExecutor` (`workers = 2`) | Claude calls |
 | `buddy-outbox` | `Outbox.start()` | Paced chat bubbles |
 | `buddy-avatar` | `AvatarController.start()` | Copies, autopilot, wake-ups |
@@ -111,3 +112,13 @@ Shared state (`RoomState`, `AccessControl`, `ConversationMemory`, `Budget`) is p
 ## Config reloading
 
 `ConfigStore` checks `config.toml`'s modification time at most every 2 s. A valid edit replaces the config and prints "Config reloaded". An invalid edit prints the error in red and keeps the old config. `workers` and `max_pending` are only read at startup.
+
+## Settings window
+
+G-Earth's ▶ button sends `double_click`. G-Python raises it on a thread of its own, but Tk has to run on the process's main thread (macOS insists), so `BobbaBuddy.open_settings()` only queues a request. The main thread, which otherwise just waits for the session to end, picks it up in `SettingsHost.serve()` and runs the window there until it closes. The bot's other threads keep working meanwhile.
+
+- **Saving:** `settings/configfile.py` edits `config.toml` with `tomlkit`, so comments and untouched keys stay as they are. The result is checked with `parse_config()` first and written atomically, then `ConfigStore.reload_now()` applies it without waiting for the 2 s check.
+- **ON/OFF:** the header switch calls `BobbaBuddy.set_enabled()`. Switching on also clears a fatal API error.
+- **To the front:** the bot is a background process, so on macOS the window activates the app through the Objective-C runtime and floats on top until it's focused.
+- **No Tkinter** (some Linux installs) or no display: the bot keeps running and prints a notice in the G-Earth console.
+

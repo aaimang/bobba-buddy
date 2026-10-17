@@ -129,7 +129,7 @@ class AvatarController:
             room: Shared room state.
             notice: Writes a message to the owner's G-Earth console: ``(text, color)``.
             notice_once: Like ``notice`` but once per key: ``(key, text, color)``.
-            is_enabled: Whether the bot is switched on (double-click toggles it).
+            is_enabled: Whether the bot is switched on (the switch in the settings window).
             clock: Monotonic clock in seconds; injectable for tests.
             rng: Random source; injectable for repeatable tests.
         """

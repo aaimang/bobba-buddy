@@ -332,18 +332,50 @@ def test_busy_reply_and_refund(harness):
     assert len(harness.responder.calls) == 2
 
 
-def test_fatal_error_pauses_until_toggled(harness):
+def test_fatal_error_pauses_until_switched_on(harness):
     harness.responder.replies.append(Reply(ReplyKind.FATAL, error="AuthenticationError"))
     harness.user_says(FRIEND_IDX, "/q hi")
     assert harness.bot.fatal_error
     assert "bot paused" in harness.ext.console_text()
+    assert "switch the bot back ON" in harness.ext.console_text()
     harness.bot.access.clear()
     harness.user_says(FRIEND_IDX, "/q hi")
     assert len(harness.responder.calls) == 1
-    harness.ext.event("double_click")  # off
-    harness.ext.event("double_click")  # on again, clears the error
+    assert harness.bot.status()["fatal_error"] == "AuthenticationError"
+    harness.bot.set_enabled(True)  # the switch in the settings window clears the error
+    assert harness.bot.status()["fatal_error"] is None
     harness.user_says(FRIEND_IDX, "/q hi")
     assert len(harness.responder.calls) == 2
+
+
+def test_play_button_opens_settings(tmp_path):
+    opened = []
+    h = Harness(tmp_path)
+    h.bot._open_settings = lambda: opened.append(True)
+    h.ext.event("double_click")
+    assert opened == [True]
+    assert h.bot.enabled  # no longer toggles
+    h.close()
+
+
+def test_play_button_without_settings_window(harness):
+    harness.ext.event("double_click")
+    assert "settings window isn't available" in harness.ext.console_text()
+    assert harness.bot.enabled
+
+
+def test_set_enabled_and_status(harness):
+    harness.bot.set_enabled(False)
+    assert "Bot OFF" in harness.ext.console_text()
+    harness.user_says(FRIEND_IDX, "/q hi")
+    assert harness.responder.calls == []
+    status = harness.bot.status()
+    assert status["enabled"] is False
+    assert status["own_name"] == OWNER
+    assert status["spent_usd"] == 0.0
+    assert status["budget_usd"] == harness.config.limits.daily_budget_usd
+    harness.bot.set_enabled(True)
+    assert "Bot ON" in harness.ext.console_text()
 
 
 def test_daily_budget(tmp_path):
@@ -599,7 +631,7 @@ class TestReturnOnExit:
     def test_off_when_bot_off_or_disabled(self, tmp_path):
         bot, ext = self.make(tmp_path)
         ext.fire(TO_CLIENT, "RoomReady", "model_a", 77)
-        bot.toggle()  # OFF
+        bot.set_enabled(False)
         ext.fire(TO_CLIENT, "CloseConnection")
         time.sleep(0.2)
         assert self.returns(ext) == []

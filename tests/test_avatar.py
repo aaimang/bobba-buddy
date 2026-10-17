@@ -472,7 +472,7 @@ def test_mimic_disabled(tmp_path):
 
 def test_bot_off_does_nothing(h):
     h.unlock("Dance")
-    h.ext.event("double_click")  # OFF
+    h.bot.set_enabled(False)
     h.ext.fire(TO_CLIENT, "Dance", FRIEND_IDX, 1)
     assert h.step() is None
 
