@@ -1,4 +1,4 @@
-# Ask Claude bot: documentation
+# Bobba Buddy: documentation
 
 Documentation for the Habbo AIR chat and avatar bot that runs as a G-Earth extension. The project README covers day-to-day use; these pages go deeper.
 
@@ -37,7 +37,7 @@ Then open `docs/sphinx/_build/html/index.html`. Details are in `docs/sphinx/READ
 
 ## Version history
 
-The project uses [semantic versioning](https://semver.org): `MAJOR.MINOR.PATCH`, tagged in git as `vMAJOR.MINOR.PATCH`. The version lives in `pyproject.toml` and `src/habbo_ask_bot/__init__.py`; change both together.
+The project uses [semantic versioning](https://semver.org): `MAJOR.MINOR.PATCH`, tagged in git as `vMAJOR.MINOR.PATCH`. The version lives in `pyproject.toml` and `src/bobba_buddy/__init__.py`; change both together.
 
 - **PATCH** (`1.0.1`): bug fixes and packet-layout fixes that change no settings.
 - **MINOR** (`1.1.0`): new commands, avatar actions or config options; existing `config.toml` files keep working.
@@ -45,4 +45,5 @@ The project uses [semantic versioning](https://semver.org): `MAJOR.MINOR.PATCH`,
 
 | Tag | Contents |
 |---|---|
+| `v1.1.0` | Renamed to **Bobba Buddy**: package `bobba_buddy` (run with `python -m bobba_buddy`), class `BobbaBuddy`, G-Earth title "Bobba Buddy", log file `logs/bobba-buddy.log`, project folder `bobba-buddy`. `config.toml` is unchanged. |
 | `v1.0.0` | First release. Chat commands `/q`, `/roast`, `/suggest`, `/joke`, with whitelist, cooldowns, a daily budget and per-user `/q` memory. Avatar copying, autopilot and anti-idle. Room rejoin and return. Live-client packet fixes, the cost report, the G-Earth installer, these docs and the Sphinx API reference. |

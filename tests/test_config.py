@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from habbo_ask_bot.config import ConfigError, ConfigStore, load_config, parse_config
+from bobba_buddy.config import ConfigError, ConfigStore, load_config, parse_config
 
 EXAMPLE = os.path.join(os.path.dirname(__file__), "..", "config.example.toml")
 

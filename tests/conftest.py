@@ -19,9 +19,9 @@ from typing import Any
 
 import pytest
 
-from habbo_ask_bot.gpython import Direction, HMessage, HPacket
-from habbo_ask_bot.llm import Reply, ReplyKind
-from habbo_ask_bot.protocol import ChatMode, OutgoingChat, parse_outgoing_chat
+from bobba_buddy.gpython import Direction, HMessage, HPacket
+from bobba_buddy.llm import Reply, ReplyKind
+from bobba_buddy.protocol import ChatMode, OutgoingChat, parse_outgoing_chat
 
 TO_CLIENT = Direction.TO_CLIENT
 TO_SERVER = Direction.TO_SERVER
@@ -384,7 +384,7 @@ class FakeExtension:
 
 @dataclass
 class FakeResponder:
-    """Scripted stand-in for :class:`~habbo_ask_bot.llm.ClaudeResponder`.
+    """Scripted stand-in for :class:`~bobba_buddy.llm.ClaudeResponder`.
 
     Attributes:
         replies: Replies to return, in order; once empty, a default OK reply is used.

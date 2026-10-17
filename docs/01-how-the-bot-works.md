@@ -25,10 +25,10 @@ It does four jobs:
 
 Example: a friend types `/q what's the capital of Malaysia?` in room chat.
 
-1. **Packet in.** G-Earth delivers the incoming `Chat` packet to `AskBot._on_incoming_chat` (`bot.py`). That callback only parses and hands the work off. See [Threads](#threads-and-the-one-rule-that-matters).
+1. **Packet in.** G-Earth delivers the incoming `Chat` packet to `BobbaBuddy._on_incoming_chat` (`bot.py`). That callback only parses and hands the work off. See [Threads](#threads-and-the-one-rule-that-matters).
 2. **Is it a command?** `parse_command` (`commands.py`) matches the text against the enabled prefixes, case-insensitively, and requires a space or the end of the text after the prefix. Ordinary chat stops here.
 3. **Who said it?** The room index in the packet is looked up in `RoomState` (`room.py`) to get a name. The owner's own messages come back as an echo and are ignored here; they're handled from the outgoing packet instead.
-4. **Gate** (`AskBot.handle`), cheapest check first:
+4. **Gate** (`BobbaBuddy.handle`), cheapest check first:
    - whitelist (the owner is always allowed)
    - can the reply mode be sent at all ([packet safety](06-gearth-requirements.md#packet-safety-and-developer-mode))
    - input length
@@ -36,13 +36,13 @@ Example: a friend types `/q what's the capital of Malaysia?` in room chat.
    - per-user and per-target cooldown, one request in flight per user (`access.py`)
    - daily budget (`budget.py`)
    - queue size
-5. **Claude call** on a worker thread (`AskBot._work` → `ClaudeResponder.respond` in `llm.py`):
+5. **Claude call** on a worker thread (`BobbaBuddy._work` → `ClaudeResponder.respond` in `llm.py`):
    - system prompt = base persona + the command's task (`prompts.py`)
    - user message = `[from Name | date] question`
    - `/q` adds the asker's recent history (`memory.py`) and the web search tool
 6. **Format.** `sanitize` strips markdown, links, newlines and any leading `/` or `:`. `split_bubbles` cuts the text into bubbles of at most 100 UTF-16 units, at word boundaries (`textfmt.py`).
 7. **Send.** The `Outbox` thread (`outbox.py`) sends one bubble every `send_interval_s`, in the mode the question came in (chat, shout or whisper). It pauses while Habbo's flood mute is active.
-8. **Record.** Cost goes into `state/budget.json`, a log line goes into `logs/askbot.log`, and the Q&A pair goes into memory for `/q`.
+8. **Record.** Cost goes into `state/budget.json`, a log line goes into `logs/bobba-buddy.log`, and the Q&A pair goes into memory for `/q`.
 
 ## The avatar worker
 
@@ -87,21 +87,21 @@ G-Python runs **every packet callback on a single thread**, and G-Earth **holds 
 | G-Python reader | `Extension.start()` | Reads G-Earth's socket |
 | G-Python packet thread | `Extension.start()` | Runs every intercept callback, one by one |
 | G-Python event threads | each event | `connection_start`, `connection_end`, `double_click` callbacks |
-| `askbot-worker-N` | `ThreadPoolExecutor` (`workers = 2`) | Claude calls |
-| `askbot-outbox` | `Outbox.start()` | Paced chat bubbles |
-| `askbot-avatar` | `AvatarController.start()` | Copies, autopilot, wake-ups |
+| `buddy-worker-N` | `ThreadPoolExecutor` (`workers = 2`) | Claude calls |
+| `buddy-outbox` | `Outbox.start()` | Paced chat bubbles |
+| `buddy-avatar` | `AvatarController.start()` | Copies, autopilot, wake-ups |
 | timers | `threading.Timer` | Room rejoin and return |
 
 Shared state (`RoomState`, `AccessControl`, `ConversationMemory`, `Budget`) is protected by locks.
 
 ## Startup and shutdown
 
-**Starting:** `uv run python -m habbo_ask_bot -p 9092` runs `__main__.main()`:
+**Starting:** `uv run python -m bobba_buddy -p 9092` runs `__main__.main()`:
 
 1. Parse arguments. G-Earth passes `-p port -c cookie -f filename` when it launches an installed extension.
-2. Set up logging (`logs/askbot.log`, rotating) and the bad-packet dump folder.
+2. Set up logging (`logs/bobba-buddy.log`, rotating) and the bad-packet dump folder.
 3. Load `.env` (API key) and `config.toml`. If either is missing, exit with code 2.
-4. **Supervisor loop:** create an `Extension` and an `AskBot`, register intercepts, connect.
+4. **Supervisor loop:** create an `Extension` and an `BobbaBuddy`, register intercepts, connect.
    - **Started from a terminal:** if G-Earth isn't running or closes, reconnect with backoff (1 s, 2 s, 4 s … up to 30 s).
    - **Started by G-Earth** (`-c` given): exit when G-Earth disconnects, since G-Earth manages it.
 5. **On `connection_start`:** reset state, report missing packet names, send `InfoRetrieve` (asks the server for the owner's identity), print the ready notice, and start the rejoin timer.

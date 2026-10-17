@@ -3,7 +3,7 @@
 Threading rule: G-Python runs every intercept callback on one thread, and G-Earth holds
 each packet until the callback returns. A slow callback freezes the game client, and an
 exception kills that thread for good. So callbacks here only parse and enqueue, always
-inside :func:`~habbo_ask_bot.guard.guarded`, and Claude calls run on a worker pool.
+inside :func:`~bobba_buddy.guard.guarded`, and Claude calls run on a worker pool.
 
 Attributes:
     EXTENSION_INFO (dict[str, str]): Title, description, version and author shown in
@@ -74,7 +74,7 @@ from .textfmt import sanitize, split_bubbles, ulen
 log = logging.getLogger(__name__)
 
 EXTENSION_INFO = {
-    "title": "Ask Claude",
+    "title": "Bobba Buddy",
     "description": "Chat commands answered by Claude, plus avatar autopilot, copying and anti-idle",
     "version": __version__,
     "author": "aimanamri",
@@ -120,7 +120,7 @@ class Route:
     whisper_target: str | None = None
 
 
-class AskBot:
+class BobbaBuddy:
     """The bot: chat commands, room tracking, room keeping, and the avatar controller.
 
     Attributes:
@@ -188,7 +188,7 @@ class AskBot:
         )
         limits = config().limits
         self._executor = executor or ThreadPoolExecutor(
-            max_workers=limits.workers, thread_name_prefix="askbot-worker"
+            max_workers=limits.workers, thread_name_prefix="buddy-worker"
         )
         self._pending = 0
         self._pending_lock = threading.Lock()

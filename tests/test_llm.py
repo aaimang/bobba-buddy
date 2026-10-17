@@ -6,8 +6,8 @@ import anthropic
 import httpx2
 import pytest
 
-from habbo_ask_bot.config import ClaudeConfig, PricingConfig
-from habbo_ask_bot.llm import ClaudeResponder, ReplyKind, extract_answer
+from bobba_buddy.config import ClaudeConfig, PricingConfig
+from bobba_buddy.llm import ClaudeResponder, ReplyKind, extract_answer
 
 REQ = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
 

@@ -5,7 +5,7 @@
 ## Layout
 
 ```
-habbo-ask-bot/
+bobba-buddy/
 ├─ pyproject.toml            dependencies: g-python==0.1.6, anthropic>=1.8,<2, python-dotenv
 ├─ config.example.toml       every option, commented (copy to config.toml)
 ├─ config.toml               your settings (git-ignored)
@@ -13,9 +13,9 @@ habbo-ask-bot/
 ├─ README.md                 user guide
 ├─ docs/                     these pages
 │  └─ sphinx/                Sphinx project: guides + API reference from docstrings
-├─ src/habbo_ask_bot/
+├─ src/bobba_buddy/
 │  ├─ __main__.py            CLI entry point, logging, supervisor/reconnect loop
-│  ├─ bot.py                 AskBot: wires packets → commands → Claude → outbox; room keeping
+│  ├─ bot.py                 BobbaBuddy: wires packets → commands → Claude → outbox; room keeping
 │  ├─ avatar.py              AvatarController: copying, autopilot, anti-idle
 │  ├─ protocol.py            packet parsing and building (pure functions)
 │  ├─ room.py                RoomState: users, positions, owner, floor map, seen packets
@@ -35,7 +35,7 @@ habbo-ask-bot/
 │  ├─ install_gearth.py      registers the bot in G-Earth's Extensions list
 │  └─ cost_report.py         spend by day, command and person
 ├─ tests/                    offline pytest suite (fake G-Earth, fake Claude)
-├─ logs/                     askbot.log (rotating), bad-packets/ (git-ignored)
+├─ logs/                     bobba-buddy.log (rotating), bad-packets/ (git-ignored)
 └─ state/                    budget.json, last_room.json (git-ignored)
 ```
 
@@ -43,10 +43,10 @@ habbo-ask-bot/
 
 ### `__main__.py`
 - **`main()`:** arguments, logging, `.env`, config, the API key check, and the supervisor loop.
-- **`run_session()`:** one G-Earth connection: builds `Extension` and `AskBot`, waits until disconnect.
+- **`run_session()`:** one G-Earth connection: builds `Extension` and `BobbaBuddy`, waits until disconnect.
 - **`start_extension()`:** wraps `Extension.start()`. g-python can hang forever if G-Earth refuses the connection, so this breaks its internal barrier.
 
-### `bot.py`: `AskBot`
+### `bot.py`: `BobbaBuddy`
 - **Setup:** `install()` registers every intercept and event; `start()` / `stop()` run the outbox, avatar worker and timers.
 - **Room and session handlers:** `_on_connection_start`, `_on_users`, `_on_user_remove`, `_on_room_ready`, `_on_room_closed`, `_on_user_object`, `_on_flood_control`.
 - **Chat:**
@@ -111,13 +111,13 @@ The roast command's settings live under `[commands.roast]`, matching its `/roast
 | File | Written by | Contents |
 |---|---|---|
 | `state/budget.json` | `Budget` | `{"date", "spent_usd", "requests"}` for today |
-| `state/last_room.json` | `AskBot._save_last_room` | `{"room_id"}` of the last room entered |
-| `logs/askbot.log` | logging | Everything; one `cmd=…` line per Claude call |
+| `state/last_room.json` | `BobbaBuddy._save_last_room` | `{"room_id"}` of the last room entered |
+| `logs/bobba-buddy.log` | logging | Everything; one `cmd=…` line per Claude call |
 | `logs/bad-packets/*.hex` | `guard.report_bad_packet` | Full copy of the first unparseable packet per type per session |
 
 ## Prompts and tone
 
-All wording is in `src/habbo_ask_bot/prompts.py`:
+All wording is in `src/bobba_buddy/prompts.py`:
 - **`BASE_SYSTEM`:** the persona (a chill Habbo regular) and the rules every reply follows: same language as the question, plain text, the Habbo Way, and ignoring prompt injection.
 - **`ADDENDA["q"]`:** brief by default; longer only when needed.
 - **`ADDENDA["roast"]`:** the `/roast` prompt. It rotates styles (backhanded compliment, comparison, exaggeration, rhyme, fake sympathy), with a guardrail against real-world appearance, identity, family and health.

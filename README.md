@@ -1,4 +1,4 @@
-# Ask Claude: a Habbo chat bot for G-Earth
+# Bobba Buddy: a Habbo chat bot for G-Earth
 
 A G-Earth extension in Python for the Habbo AIR client. It answers whitelisted chat commands with Claude, and gives your avatar a life of its own.
 
@@ -34,7 +34,7 @@ Replies come back the way the question was asked: chat gets chat, shout gets sho
 Requirements: macOS, [G-Earth](https://github.com/G-Realm/G-Earth) with the Habbo AIR client, Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-cd ~/Desktop/habbo-ask-bot
+cd ~/Desktop/bobba-buddy
 uv sync
 cp .env.example .env                 # then paste your ANTHROPIC_API_KEY into .env
 cp config.example.toml config.toml   # then put your friends' names in `whitelist`
@@ -48,7 +48,7 @@ The example config has `rejoin_on_start` and `return_on_exit` off. Turn them on 
 **From a terminal.** Start G-Earth, connect to Habbo, then run:
 
 ```bash
-uv run python -m habbo_ask_bot -p 9092
+uv run python -m bobba_buddy -p 9092
 ```
 
 - Use the port shown in G-Earth's Extensions tab.
@@ -62,7 +62,7 @@ uv run python -m habbo_ask_bot -p 9092
 uv run python scripts/install_gearth.py
 ```
 
-Restart G-Earth and "Ask Claude" appears in the Extensions tab. Remove it with `--uninstall`.
+Restart G-Earth and "Bobba Buddy" appears in the Extensions tab. Remove it with `--uninstall`.
 
 ### Restarting and reloading the room
 
@@ -163,7 +163,7 @@ uv run python scripts/cost_report.py --days 30
 ```
 
 - **`state/budget.json`:** today's running total, which the daily cap checks. It resets at local midnight.
-- **`logs/askbot.log`:** one line per Claude call, with who asked, tokens, web searches, estimated cost and request id.
+- **`logs/bobba-buddy.log`:** one line per Claude call, with who asked, tokens, web searches, estimated cost and request id.
 
 Most of the cost is web searches: $0.01 each, plus the search results Claude reads. Plain answers cost fractions of a cent. To spend less, set `web_search_max_uses = 1` under `[claude]`, or `web_search = false` under `[commands.q]`. These are the bot's own estimates; Anthropic's billing page is the authoritative number.
 
@@ -199,9 +199,9 @@ uv run ruff check .  # lint, including Google-style docstrings
 uv run --group docs sphinx-build -b html docs/sphinx docs/sphinx/_build/html   # HTML docs
 ```
 
-Logs go to `logs/askbot.log` (rotating, about 6 MB kept).
+Logs go to `logs/bobba-buddy.log` (rotating, about 6 MB kept).
 
-**Versioning.** Current version: **1.0.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/habbo_ask_bot/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.1.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 
@@ -217,4 +217,4 @@ Logs go to `logs/askbot.log` (rotating, about 6 MB kept).
 | Console: "Unknown packet names…" | G-Earth's packet info for this client version is missing. Update G-Earth. |
 | Console: "Claude API error, bot paused" | Fix the API key or model in `.env`/`config.toml`, then double-click the extension. |
 | A file appears in `logs/bad-packets/` | Habbo changed a packet layout. The bot keeps working around it; share the file to get the parser updated. |
-| Nothing happens at all | Check that the name is in `whitelist`, that the bot is ON (double-click toggles it), and look in `logs/askbot.log`. |
+| Nothing happens at all | Check that the name is in `whitelist`, that the bot is ON (double-click toggles it), and look in `logs/bobba-buddy.log`. |

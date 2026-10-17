@@ -3,7 +3,7 @@
 Two sources:
 
 * ``state/budget.json``: today's running total, the same number the daily cap checks.
-* ``logs/askbot.log*``: one line per Claude call (cost, tokens, searches, who asked).
+* ``logs/bobba-buddy.log*``: one line per Claude call (cost, tokens, searches, who asked).
 
 Usage::
 
@@ -46,7 +46,7 @@ def read_calls(log_dir: Path) -> list[dict]:
         ``out``, ``searches`` and ``cost``.
     """
     calls = []
-    for path in sorted(log_dir.glob("askbot.log*")):
+    for path in sorted(log_dir.glob("bobba-buddy.log*")):
         for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
             m = LINE.match(line)
             if m:
@@ -129,7 +129,7 @@ def main() -> int:
 
     calls = read_calls(PROJECT / "logs")
     if not calls:
-        print("\nNo Claude calls found in logs/askbot.log*.")
+        print("\nNo Claude calls found in logs/bobba-buddy.log*.")
         return 0
 
     # History by day.

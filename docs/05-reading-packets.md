@@ -122,7 +122,7 @@ Method:
 
 ## Decoding a bad-packet dump
 
-When the bot can't parse a packet, it writes one warning in `logs/askbot.log`:
+When the bot can't parse a packet, it writes one warning in `logs/bobba-buddy.log`:
 
 ```
 Users packet didn't match the expected layout (entry 0 of 1 (player '.Han.', index 931):

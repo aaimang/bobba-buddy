@@ -35,7 +35,7 @@ The strict build currently passes with no warnings.
 
 ## Adding things
 
-- **A new module:** add `api/habbo_ask_bot.<name>.rst` (copy an existing one) and list it in `api/index.rst`.
+- **A new module:** add `api/bobba_buddy.<name>.rst` (copy an existing one) and list it in `api/index.rst`.
 - **A new guide:** add `docs/<name>.md`, then `guides/<name>.md` containing `` ```{include} ../../<name>.md `` and a closing fence, and list it in `index.rst`.
 - **Docstrings:** follow the Google style used everywhere (`Args:`, `Returns:`, `Raises:`, `Attributes:`). `uv run ruff check .` enforces it (the `D` rules with `convention = "google"`).
 

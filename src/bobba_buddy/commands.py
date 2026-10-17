@@ -3,7 +3,7 @@
 Attributes:
     SPECS (dict[str, CommandSpec]): The fixed properties of each command, keyed by its
         internal name (``q``, ``roast``, ``suggest``, ``joke``). Prefixes and limits
-        come from config instead (:class:`~habbo_ask_bot.config.CommandConfig`).
+        come from config instead (:class:`~bobba_buddy.config.CommandConfig`).
     ParsedKind: What a matched command asks for: ``"run"``, ``"usage"`` or ``"reset"``.
 """
 

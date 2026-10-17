@@ -19,16 +19,16 @@ from conftest import (
     users_packet,
 )
 
-from habbo_ask_bot.bot import AskBot
-from habbo_ask_bot.budget import Budget
-from habbo_ask_bot.config import parse_config
-from habbo_ask_bot.protocol import (
+from bobba_buddy.bot import BobbaBuddy
+from bobba_buddy.budget import Budget
+from bobba_buddy.config import parse_config
+from bobba_buddy.protocol import (
     parse_entry_tile,
     parse_floor_heightmap,
     parse_sleep,
     parse_user_updates,
 )
-from habbo_ask_bot.room import chebyshev
+from bobba_buddy.room import chebyshev
 
 OWNER_IDX, FRIEND_IDX, FAR_IDX, PET_IDX = 0, 1, 2, 3
 OWNER_POS, FRIEND_POS, FAR_POS, PET_POS = (5, 5), (6, 5), (9, 9), (5, 6)
@@ -67,7 +67,7 @@ class Clock:
 
 
 class AvatarHarness:
-    """An AskBot in a 10x10 test room, driven step by step with a fake clock.
+    """An BobbaBuddy in a 10x10 test room, driven step by step with a fake clock.
 
     The owner stands at (5, 5), a friend 1 tile away, another player far away, and a
     pet next to the owner. The door sticks out of the wall at (0, 5).
@@ -90,7 +90,7 @@ class AvatarHarness:
         self.clock = Clock()
         self.config = parse_config({"avatar": avatar or {}})
         self.ext = FakeExtension()
-        self.bot = AskBot(
+        self.bot = BobbaBuddy(
             self.ext,
             lambda: self.config,
             FakeResponder(),
@@ -231,7 +231,7 @@ LIVE_USER_UPDATE = bytes.fromhex(
 
 
 def test_parse_live_user_update_with_extra_int():
-    from habbo_ask_bot.gpython import HPacket
+    from bobba_buddy.gpython import HPacket
 
     statuses, problem = parse_user_updates(HPacket.from_bytes(LIVE_USER_UPDATE))
     assert problem is None
@@ -396,7 +396,7 @@ def test_bad_user_update_is_logged_once_and_partly_used(h, caplog):
     pkt = user_update((FAR_IDX, 4, 4, "/"), (FRIEND_IDX, 6, 5, "/sit 0.5 1/"))
     pkt.bytearray = pkt.bytearray[:-5]
     pkt.fix_length()
-    with caplog.at_level("DEBUG", logger="habbo_ask_bot.guard"):
+    with caplog.at_level("DEBUG", logger="bobba_buddy.guard"):
         h.ext.fire(TO_CLIENT, "UserUpdate", pkt=pkt)
         h.ext.fire(TO_CLIENT, "UserUpdate", pkt=pkt)
     warnings = [r for r in caplog.records if r.levelname == "WARNING"]
@@ -582,7 +582,7 @@ def test_autopilot_mixes_all_actions(auto):
         "LookTo",
     }
     assert all(a.reason == "auto" for a in done)
-    from habbo_ask_bot.protocol import LOOK_DIRECTIONS
+    from bobba_buddy.protocol import LOOK_DIRECTIONS
 
     for a in done:
         if a.packet == "AvatarExpression":
@@ -621,8 +621,8 @@ def test_autopilot_walk_targets_are_safe(auto):
 
 
 def test_door_excluded_without_entry_tile():
-    from habbo_ask_bot.protocol import RoomUser, UserKind
-    from habbo_ask_bot.room import RoomState
+    from bobba_buddy.protocol import RoomUser, UserKind
+    from bobba_buddy.room import RoomState
 
     room = RoomState()
     room.set_identity(1, "Owner")
@@ -703,7 +703,7 @@ def test_startup_notice_by_default(auto):
 
 
 def test_invalid_avatar_config():
-    from habbo_ask_bot.config import ConfigError
+    from bobba_buddy.config import ConfigError
 
     for bad in (
         {"autopilot_min_s": 2},

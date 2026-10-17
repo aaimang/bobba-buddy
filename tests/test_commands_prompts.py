@@ -5,9 +5,9 @@ from datetime import date
 
 import pytest
 
-from habbo_ask_bot.commands import parse_command, usage_text
-from habbo_ask_bot.config import COMMAND_DEFAULTS
-from habbo_ask_bot.prompts import BASE_SYSTEM, build_user_message, system_prompt
+from bobba_buddy.commands import parse_command, usage_text
+from bobba_buddy.config import COMMAND_DEFAULTS
+from bobba_buddy.prompts import BASE_SYSTEM, build_user_message, system_prompt
 
 CMDS = dict(COMMAND_DEFAULTS)
 

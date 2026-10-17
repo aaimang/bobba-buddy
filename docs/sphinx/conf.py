@@ -1,4 +1,4 @@
-"""Sphinx configuration for the Ask Claude bot documentation.
+"""Sphinx configuration for the Bobba Buddy documentation.
 
 Build from the project root::
 
@@ -16,11 +16,11 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from habbo_ask_bot import __version__  # noqa: E402
+from bobba_buddy import __version__  # noqa: E402
 
 # -- Project -------------------------------------------------------------------------
 
-project = "Ask Claude"
+project = "Bobba Buddy"
 author = "aimanamri"
 copyright = "2026, aimanamri"  # noqa: A001 - Sphinx's name for it
 version = release = __version__
@@ -74,4 +74,4 @@ myst_heading_anchors = 4
 # -- HTML ----------------------------------------------------------------------------
 
 html_theme = "furo"
-html_title = f"Ask Claude {release}"
+html_title = f"Bobba Buddy {release}"

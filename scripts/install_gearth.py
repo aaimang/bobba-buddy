@@ -1,6 +1,6 @@
 """Register the bot in G-Earth's Extensions list (macOS).
 
-Writes ``<G-Earth>/Extensions/Ask Claude_<version>/command.txt``, the same JSON-argv
+Writes ``<G-Earth>/Extensions/Bobba Buddy_<version>/command.txt``, the same JSON-argv
 format G-Earth uses for store-installed extensions. G-Earth substitutes ``{cookie}``,
 ``{port}`` and ``{filename}`` when it launches the extension.
 
@@ -28,10 +28,10 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "src"))
 
-from habbo_ask_bot import __version__  # noqa: E402
+from bobba_buddy import __version__  # noqa: E402
 
 DEFAULT_GEARTH_DIR = Path("~/Library/Application Support/G-Earth").expanduser()
-FOLDER_PREFIX = "Ask Claude_"
+FOLDER_PREFIX = "Bobba Buddy_"
 
 
 def main() -> int:
@@ -73,7 +73,7 @@ def main() -> int:
     command = [
         str(python),
         "-m",
-        "habbo_ask_bot",
+        "bobba_buddy",
         "--project-dir",
         str(PROJECT),
         "-c",
@@ -93,7 +93,7 @@ def main() -> int:
             shutil.rmtree(folder)
     (target / "extension").mkdir(parents=True, exist_ok=True)
     (target / "command.txt").write_text(content)
-    print("Done. Restart G-Earth; 'Ask Claude' appears in the Extensions tab.")
+    print("Done. Restart G-Earth; 'Bobba Buddy' appears in the Extensions tab.")
     return 0
 
 

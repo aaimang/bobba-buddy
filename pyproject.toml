@@ -1,6 +1,6 @@
 [project]
-name = "habbo-ask-bot"
-version = "1.0.0"
+name = "bobba-buddy"
+version = "1.1.0"
 description = "G-Earth extension: Habbo chat commands answered by Claude, plus avatar autopilot, copying and anti-idle"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-habbo-ask-bot = "habbo_ask_bot.__main__:main"
+bobba-buddy = "bobba_buddy.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -30,7 +30,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/habbo_ask_bot"]
+packages = ["src/bobba_buddy"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

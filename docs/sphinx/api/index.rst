@@ -1,25 +1,25 @@
 Package reference
 =================
 
-Generated from the Google-style docstrings in ``src/habbo_ask_bot``.
+Generated from the Google-style docstrings in ``src/bobba_buddy``.
 
 .. toctree::
    :maxdepth: 1
 
-   habbo_ask_bot
-   habbo_ask_bot.__main__
-   habbo_ask_bot.bot
-   habbo_ask_bot.avatar
-   habbo_ask_bot.protocol
-   habbo_ask_bot.room
-   habbo_ask_bot.commands
-   habbo_ask_bot.prompts
-   habbo_ask_bot.llm
-   habbo_ask_bot.textfmt
-   habbo_ask_bot.outbox
-   habbo_ask_bot.access
-   habbo_ask_bot.budget
-   habbo_ask_bot.memory
-   habbo_ask_bot.config
-   habbo_ask_bot.guard
-   habbo_ask_bot.gpython
+   bobba_buddy
+   bobba_buddy.__main__
+   bobba_buddy.bot
+   bobba_buddy.avatar
+   bobba_buddy.protocol
+   bobba_buddy.room
+   bobba_buddy.commands
+   bobba_buddy.prompts
+   bobba_buddy.llm
+   bobba_buddy.textfmt
+   bobba_buddy.outbox
+   bobba_buddy.access
+   bobba_buddy.budget
+   bobba_buddy.memory
+   bobba_buddy.config
+   bobba_buddy.guard
+   bobba_buddy.gpython

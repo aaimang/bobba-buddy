@@ -5,15 +5,15 @@ from functools import partial
 
 from conftest import packet
 
-from habbo_ask_bot.gpython import Direction, HMessage
-from habbo_ask_bot.guard import (
+from bobba_buddy.gpython import Direction, HMessage
+from bobba_buddy.guard import (
     configure_dump_dir,
     guarded,
     hex_dump,
     report_bad_packet,
     reset_reports,
 )
-from habbo_ask_bot.protocol import ProtocolError
+from bobba_buddy.protocol import ProtocolError
 
 
 def test_protocol_error_is_reported_once_with_dump(caplog):
@@ -24,7 +24,7 @@ def test_protocol_error_is_reported_once_with_dump(caplog):
 
     handler = guarded(on_thing)
     msg = HMessage(packet(1, "hi"), Direction.TO_CLIENT, 0)
-    with caplog.at_level(logging.DEBUG, logger="habbo_ask_bot.guard"):
+    with caplog.at_level(logging.DEBUG, logger="bobba_buddy.guard"):
         handler(msg)
         handler(msg)
     levels = [r.levelname for r in caplog.records]
@@ -37,7 +37,7 @@ def test_other_errors_keep_traceback(caplog):
     def boom(_msg):
         raise RuntimeError("bug")
 
-    with caplog.at_level(logging.ERROR, logger="habbo_ask_bot.guard"):
+    with caplog.at_level(logging.ERROR, logger="bobba_buddy.guard"):
         guarded(boom)(None)
     assert caplog.records[0].exc_info is not None
 
@@ -47,7 +47,7 @@ def test_partial_handlers_get_a_name(caplog):
         raise ProtocolError("x")
 
     reset_reports()
-    with caplog.at_level(logging.WARNING, logger="habbo_ask_bot.guard"):
+    with caplog.at_level(logging.WARNING, logger="bobba_buddy.guard"):
         guarded(partial(handle, "chat"))(HMessage(packet(1), Direction.TO_CLIENT, 0))
     assert caplog.records[0].getMessage().startswith("handle packet")
 
@@ -62,7 +62,7 @@ def test_first_bad_packet_is_saved_whole(tmp_path, caplog):
     configure_dump_dir(tmp_path)
     try:
         pkt = packet(*range(200))  # 806 bytes, longer than the log excerpt
-        with caplog.at_level(logging.WARNING, logger="habbo_ask_bot.guard"):
+        with caplog.at_level(logging.WARNING, logger="bobba_buddy.guard"):
             report_bad_packet("Users", pkt, "entry 3: odd tail")
             report_bad_packet("Users", pkt, "entry 3: odd tail")
         [saved] = list(tmp_path.glob("Users-*.hex"))

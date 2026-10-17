@@ -169,7 +169,7 @@ class AvatarController:
         """Start the worker thread (no-op if it's already running)."""
         if self._thread is None:
             self._stop.clear()
-            self._thread = threading.Thread(target=self._run, name="askbot-avatar", daemon=True)
+            self._thread = threading.Thread(target=self._run, name="buddy-avatar", daemon=True)
             self._thread.start()
 
     def stop(self, timeout: float = 2.0) -> None:

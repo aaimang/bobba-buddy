@@ -74,7 +74,7 @@ class Outbox:
         """Start the sender thread (no-op if it's already running)."""
         if self._thread is None:
             self._stop.clear()
-            self._thread = threading.Thread(target=self._run, name="askbot-outbox", daemon=True)
+            self._thread = threading.Thread(target=self._run, name="buddy-outbox", daemon=True)
             self._thread.start()
 
     def stop(self, timeout: float = 2.0) -> None:

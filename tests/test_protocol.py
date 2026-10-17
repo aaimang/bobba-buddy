@@ -3,8 +3,8 @@
 import pytest
 from conftest import bot_entity, incoming_chat, packet, pet, player, users_packet
 
-from habbo_ask_bot.gpython import HPacket
-from habbo_ask_bot.protocol import (
+from bobba_buddy.gpython import HPacket
+from bobba_buddy.protocol import (
     ChatMode,
     ProtocolError,
     UserKind,

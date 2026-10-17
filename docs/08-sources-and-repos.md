@@ -70,4 +70,4 @@ Also from your own G-Earth folder: `~/Library/Application Support/G-Earth/Extens
 ## Other
 
 - **wikiHow, "Good Roasts":** techniques for the `/roast` prompt (pasted into the chat, since it couldn't be fetched).
-- **Your own captures** in `logs/bad-packets/` and `logs/askbot.log`: the only source for the extra ints in `UserUpdate` and `Users`.
+- **Your own captures** in `logs/bad-packets/` and `logs/bobba-buddy.log`: the only source for the extra ints in `UserUpdate` and `Users`.

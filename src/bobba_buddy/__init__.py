@@ -5,11 +5,11 @@ commands (``/q``, ``/roast``, ``/suggest``, ``/joke``) through the Claude API an
 gives the logged-in avatar its own behaviour: copying nearby players, a random
 autopilot, anti-idle, and returning to the last room.
 
-Start it with ``python -m habbo_ask_bot -p 9092`` (see :mod:`habbo_ask_bot.__main__`).
+Start it with ``python -m bobba_buddy -p 9092`` (see :mod:`bobba_buddy.__main__`).
 
 Attributes:
     __version__ (str): The package version, also shown to G-Earth as the extension
         version.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"

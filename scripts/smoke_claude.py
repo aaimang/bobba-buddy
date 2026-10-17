@@ -25,10 +25,10 @@ sys.path.insert(0, str(PROJECT / "src"))
 import anthropic  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 
-from habbo_ask_bot.config import ConfigError, load_config, parse_config  # noqa: E402
-from habbo_ask_bot.llm import ClaudeResponder, ReplyKind  # noqa: E402
-from habbo_ask_bot.prompts import build_user_message, system_prompt  # noqa: E402
-from habbo_ask_bot.textfmt import sanitize, split_bubbles  # noqa: E402
+from bobba_buddy.config import ConfigError, load_config, parse_config  # noqa: E402
+from bobba_buddy.llm import ClaudeResponder, ReplyKind  # noqa: E402
+from bobba_buddy.prompts import build_user_message, system_prompt  # noqa: E402
+from bobba_buddy.textfmt import sanitize, split_bubbles  # noqa: E402
 
 CASES = [
     ("q", "berapa suhu di Kuala Lumpur hari ini?", None, None),

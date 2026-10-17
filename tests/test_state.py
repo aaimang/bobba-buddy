@@ -4,10 +4,10 @@ import json
 from datetime import date
 from types import SimpleNamespace
 
-from habbo_ask_bot.access import AccessControl, Denial, DenyReason, Ticket, is_allowed
-from habbo_ask_bot.budget import Budget, estimate_cost
-from habbo_ask_bot.config import PricingConfig
-from habbo_ask_bot.memory import ConversationMemory
+from bobba_buddy.access import AccessControl, Denial, DenyReason, Ticket, is_allowed
+from bobba_buddy.budget import Budget, estimate_cost
+from bobba_buddy.config import PricingConfig
+from bobba_buddy.memory import ConversationMemory
 
 
 class Clock:

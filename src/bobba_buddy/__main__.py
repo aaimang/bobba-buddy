@@ -1,12 +1,12 @@
-"""Entry point: ``python -m habbo_ask_bot -p 9092``.
+"""Entry point: ``python -m bobba_buddy -p 9092``.
 
 Standalone, it reconnects to G-Earth with backoff. When G-Earth launches it (it passes
 ``-c <cookie>``), it exits on disconnect and lets G-Earth manage its lifecycle.
 
 Usage::
 
-    uv run python -m habbo_ask_bot -p 9092
-    uv run python -m habbo_ask_bot -p 9092 --project-dir ~/Desktop/habbo-ask-bot
+    uv run python -m bobba_buddy -p 9092
+    uv run python -m bobba_buddy -p 9092 --project-dir ~/Desktop/bobba-buddy
 
 Attributes:
     BACKOFF_MAX_S (float): Longest wait between reconnection attempts.
@@ -28,14 +28,14 @@ from pathlib import Path
 import anthropic
 from dotenv import load_dotenv
 
-from .bot import EXTENSION_INFO, EXTENSION_SETTINGS, AskBot
+from .bot import EXTENSION_INFO, EXTENSION_SETTINGS, BobbaBuddy
 from .budget import Budget
 from .config import ConfigError, ConfigStore
 from .gpython import Extension
 from .guard import configure_dump_dir
 from .llm import ClaudeResponder
 
-log = logging.getLogger("habbo_ask_bot")
+log = logging.getLogger("bobba_buddy")
 
 BACKOFF_MAX_S = 30.0
 STABLE_SESSION_S = 60.0
@@ -51,9 +51,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ``port``, ``auth_token`` (G-Earth's cookie), ``filename``, ``project_dir``,
         ``config`` and ``log_level``.
     """
-    parser = argparse.ArgumentParser(
-        prog="habbo_ask_bot", description=EXTENSION_INFO["description"]
-    )
+    parser = argparse.ArgumentParser(prog="bobba_buddy", description=EXTENSION_INFO["description"])
     parser.add_argument("-p", "--port", type=int, default=9092, help="G-Earth extension port")
     parser.add_argument("-c", "--auth-token", help="cookie passed by G-Earth when it launches us")
     parser.add_argument("-f", "--filename", help="passed by G-Earth when it launches us")
@@ -69,7 +67,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def setup_logging(log_dir: Path, level: str, console: bool) -> None:
-    """Log to a rotating ``askbot.log`` (about 6 MB kept), and optionally to stderr.
+    """Log to a rotating ``bobba-buddy.log`` (about 6 MB kept), and optionally to stderr.
 
     Args:
         log_dir: Folder for the log files.
@@ -80,7 +78,7 @@ def setup_logging(log_dir: Path, level: str, console: bool) -> None:
     log_dir.mkdir(parents=True, exist_ok=True)
     fmt = logging.Formatter("%(asctime)s %(levelname)-7s %(threadName)s %(name)s: %(message)s")
     file_handler = logging.handlers.RotatingFileHandler(
-        log_dir / "askbot.log", maxBytes=1_000_000, backupCount=5, encoding="utf-8"
+        log_dir / "bobba-buddy.log", maxBytes=1_000_000, backupCount=5, encoding="utf-8"
     )
     file_handler.setFormatter(fmt)
     root = logging.getLogger()
@@ -170,7 +168,7 @@ def run_session(
         ``True`` if it connected at all.
     """
     ext = Extension(EXTENSION_INFO, gearth_args(args), EXTENSION_SETTINGS, silent=True)
-    bot = AskBot(
+    bot = BobbaBuddy(
         ext,
         store.get,
         responder,
@@ -191,7 +189,8 @@ def run_session(
 
     bot.start()
     bot.notice(
-        f"Ask Claude {EXTENSION_INFO['version']} loaded (model {store.get().claude.model})", "green"
+        f"Bobba Buddy {EXTENSION_INFO['version']} loaded (model {store.get().claude.model})",
+        "green",
     )
     log.info("connected to G-Earth on port %d", args.port)
     try:

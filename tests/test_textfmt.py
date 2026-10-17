@@ -2,7 +2,7 @@
 
 import pytest
 
-from habbo_ask_bot.textfmt import ELLIPSIS, sanitize, split_bubbles, ulen
+from bobba_buddy.textfmt import ELLIPSIS, sanitize, split_bubbles, ulen
 
 LOREM = (
     "Habbo Hotel is a social game where you design rooms, collect furni, trade rares, play "

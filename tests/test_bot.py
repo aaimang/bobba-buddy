@@ -18,18 +18,18 @@ from conftest import (
     users_packet,
 )
 
-from habbo_ask_bot.bot import MSG_BUDGET, MSG_BUSY, AskBot
-from habbo_ask_bot.budget import Budget
-from habbo_ask_bot.config import parse_config
-from habbo_ask_bot.llm import Reply, ReplyKind
-from habbo_ask_bot.protocol import ChatMode
+from bobba_buddy.bot import MSG_BUDGET, MSG_BUSY, BobbaBuddy
+from bobba_buddy.budget import Budget
+from bobba_buddy.config import parse_config
+from bobba_buddy.llm import Reply, ReplyKind
+from bobba_buddy.protocol import ChatMode
 
 OWNER, FRIEND, STRANGER = "Owner", "Friend", "Stranger"
 OWNER_IDX, FRIEND_IDX, STRANGER_IDX, PET_IDX = 0, 1, 2, 3
 
 
 class Harness:
-    """An AskBot in a test room with the owner, a whitelisted friend, a stranger and a pet.
+    """An BobbaBuddy in a test room with the owner, a whitelisted friend, a stranger and a pet.
 
     Attributes:
         config: The parsed test config.
@@ -63,7 +63,7 @@ class Harness:
         self.budget = Budget(
             tmp_path / "budget.json", limit_usd=lambda: budget_usd, today=lambda: date(2026, 10, 13)
         )
-        self.bot = AskBot(
+        self.bot = BobbaBuddy(
             self.ext,
             lambda: self.config,
             self.responder,
@@ -382,7 +382,7 @@ def test_room_change_drops_pending_and_users(harness):
 
 def test_users_with_an_odd_entry_still_load(harness, caplog):
     odd = player(200, "Newbie", 9, motto="hi") + [1, "undocumented"]
-    with caplog.at_level("WARNING", logger="habbo_ask_bot.guard"):
+    with caplog.at_level("WARNING", logger="bobba_buddy.guard"):
         harness.ext.fire(TO_CLIENT, "Users", pkt=users_packet(odd, player(201, "Late", 10)))
     assert harness.bot.room.find_player("Newbie").index == 9
     assert harness.bot.room.find_player("Late").index == 10
@@ -414,7 +414,7 @@ def test_missing_packet_names_are_reported(tmp_path):
     del ext.packet_infos[TO_CLIENT]["FloodControl"]
     del ext.packet_infos[TO_SERVER]["GetHeightMap"]
     cfg = parse_config({})
-    bot = AskBot(
+    bot = BobbaBuddy(
         ext,
         lambda: cfg,
         FakeResponder(),
@@ -451,7 +451,7 @@ class TestRejoin:
         """
         ext = FakeExtension()
         cfg = parse_config({"room": {"rejoin_on_start": rejoin, "rejoin_delay_s": delay}})
-        bot = AskBot(
+        bot = BobbaBuddy(
             ext,
             lambda: cfg,
             FakeResponder(),
@@ -545,7 +545,7 @@ class TestReturnOnExit:
                 }
             }
         )
-        bot = AskBot(
+        bot = BobbaBuddy(
             ext,
             lambda: cfg,
             FakeResponder(),
