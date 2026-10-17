@@ -1,5 +1,5 @@
-Bobba Buddy: Habbo chat bot for G-Earth
-=======================================
+Bobba Buddy: a hotel sidekick for G-Earth
+=========================================
 
 A G-Earth extension in Python for the Habbo AIR client. It answers whitelisted chat
 commands with Claude, and gives the logged-in avatar a life of its own: copying nearby
