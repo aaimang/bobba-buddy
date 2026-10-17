@@ -63,7 +63,7 @@ Extensions connect over TCP to `127.0.0.1:9092`. If 9092 is taken, G-Earth count
 | CONNECTION_START | 5 | game connected: host, port, hotel version, client id, client type, packet infos |
 | CONNECTION_END | 6 | game disconnected |
 | INIT | 7 | extension accepted |
-| ON_DOUBLE_CLICK | 1 | user double-clicked the extension |
+| ON_DOUBLE_CLICK | 1 | user pressed the extension's ▶ button (this bot opens its settings window) |
 
 | To G-Earth | Type | Meaning |
 |---|---|---|
@@ -84,7 +84,7 @@ Extensions connect over TCP to `127.0.0.1:9092`. If 9092 is taken, G-Earth count
 | Python | 3.6+ for 0.1.6. This project uses 3.13 via uv. On 3.12+, 0.1.6 prints harmless `SyntaxWarning`s, which the bot silences in `gpython.py` |
 | Dependencies | none |
 | Start | `Extension(info, sys.argv, settings, silent)`, where `info` needs `title`, `description`, `version`, `author`, then `ext.start()`. Arguments: `-p port` (required), `-c cookie`, `-f filename` |
-| Events | `init`, `connection_start`, `connection_end`, `double_click` (shown when `use_click_trigger=True`) |
+| Events | `init`, `connection_start`, `connection_end`, `double_click` (G-Earth's ▶ button; enabled when `use_click_trigger=True`) |
 | Intercept modes | `default` (blocking, can modify), `async` (thread per packet; shares the packet object, which is racy), `async_modify` (blocks then re-sends; can reorder) |
 
 Pitfalls in 0.1.6:

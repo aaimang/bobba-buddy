@@ -67,6 +67,9 @@ nitpick_ignore_regex = [
     ("py:class", r"g_python\..*"),
     ("py:class", r"anthropic\..*"),
     ("py:class", r"(HPacket|HMessage|Extension|Direction|Path|date|Executor)"),
+    # The settings window's Tk types and type aliases, for the same reason.
+    ("py:class", r"tk\..*"),
+    ("py:class", r"(Callback|Runner|Done|Bridge)"),
 ]
 
 # MyST: GitHub-style heading anchors, so the guides' "#section" links work here too.

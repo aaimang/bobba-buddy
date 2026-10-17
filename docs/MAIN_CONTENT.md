@@ -47,6 +47,7 @@ Each version below has a git tag (`v1.2.2` and so on), except 1.1.1 and 1.1.2: t
 
 | Version | Contents |
 |---|---|
+| `v1.3.0` | **Settings window:** G-Earth's ▶ button opens a Habbo-style Tkinter window (macOS, Windows, Linux) to edit every `config.toml` option, with the bot's ON/OFF switch, live status, and an About page with the logo, version and GitHub link. Saves keep your comments (new dependency `tomlkit`) and apply at once. ▶ no longer toggles the bot; the switch is in the window. `config.toml` is unchanged. |
 | `v1.2.2` | New tagline: "Bobba Buddy: a hotel sidekick for G-Earth" (README and docs home page). |
 | `v1.2.1` | `install_gearth.py` finds G-Earth by itself on Windows and Linux: from the running G-Earth, else by a quick search of Downloads, Desktop, Documents and home. `--gearth-dir` is now only a fallback. |
 | `v1.2.0` | Runs on **macOS, Windows and Linux**. `install_gearth.py` takes `--gearth-dir` (G-Earth's folder or `G-Earth.jar`) on Windows and Linux and uses the right virtualenv Python per OS. State and dump files are always UTF-8. A test workflow runs lint and the tests on all three systems. README has Windows (PowerShell) setup. |

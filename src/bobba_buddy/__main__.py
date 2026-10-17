@@ -34,6 +34,7 @@ from .config import ConfigError, ConfigStore
 from .gpython import Extension
 from .guard import configure_dump_dir
 from .llm import ClaudeResponder
+from .settings import BotBridge, SettingsHost
 
 log = logging.getLogger("bobba_buddy")
 
@@ -153,9 +154,18 @@ def start_extension(ext: Extension, stop: threading.Event) -> bool:
 
 
 def run_session(
-    args, store: ConfigStore, responder: ClaudeResponder, budget: Budget, stop: threading.Event
+    args,
+    store: ConfigStore,
+    responder: ClaudeResponder,
+    budget: Budget,
+    stop: threading.Event,
+    settings: SettingsHost,
 ) -> bool:
     """Run one connection to G-Earth until it closes or ``stop`` is set.
+
+    The main thread spends the session in
+    :meth:`~bobba_buddy.settings.host.SettingsHost.serve`, which opens the settings
+    window when G-Earth's ▶ button is pressed.
 
     Args:
         args: Parsed command line (with ``project_dir_resolved`` set).
@@ -163,6 +173,7 @@ def run_session(
         responder: Claude responder, shared across sessions.
         budget: Daily budget, shared across sessions.
         stop: Set to end the session.
+        settings: Settings window host, shared across sessions.
 
     Returns:
         ``True`` if it connected at all.
@@ -174,7 +185,9 @@ def run_session(
         responder,
         budget,
         last_room_path=args.project_dir_resolved / "state" / "last_room.json",
+        open_settings=settings.request_open,
     )
+    settings.bridge = BotBridge(bot, store)
     store.on_reload = lambda cfg: bot.notice(
         f"Config reloaded ({len(cfg.whitelist)} whitelisted)", "blue"
     )
@@ -194,8 +207,7 @@ def run_session(
     )
     log.info("connected to G-Earth on port %d", args.port)
     try:
-        while not ext.is_closed() and not stop.is_set():
-            stop.wait(0.5)
+        settings.serve(lambda: ext.is_closed() or stop.is_set())
     finally:
         bot.stop()
         if not ext.is_closed():
@@ -243,6 +255,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     stop = threading.Event()
+    settings = SettingsHost(config_path, project_dir / "config.example.toml")
 
     def handle_signal(signum, _frame) -> None:
         """Stop on SIGINT or SIGTERM."""
@@ -255,7 +268,7 @@ def main(argv: list[str] | None = None) -> int:
     backoff = 1.0
     while not stop.is_set():
         started = time.monotonic()
-        connected = run_session(args, store, responder, budget, stop)
+        connected = run_session(args, store, responder, budget, stop, settings)
         if launched_by_gearth or stop.is_set():
             break
         if connected and time.monotonic() - started > STABLE_SESSION_S:

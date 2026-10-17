@@ -6,7 +6,7 @@
 
 ```
 bobba-buddy/
-├─ pyproject.toml            dependencies: g-python==0.1.6, anthropic>=1.8,<2, python-dotenv
+├─ pyproject.toml            dependencies: g-python==0.1.6, anthropic>=1.8,<2, python-dotenv, tomlkit
 ├─ config.example.toml       every option, commented (copy to config.toml)
 ├─ config.toml               your settings (git-ignored)
 ├─ .env / .env.example       ANTHROPIC_API_KEY (.env is git-ignored)
@@ -29,7 +29,16 @@ bobba-buddy/
 │  ├─ memory.py              per-user /q history
 │  ├─ config.py              typed config, validation, hot reload
 │  ├─ guard.py               exception guard + bad-packet reporting
-│  └─ gpython.py             single import point for g_python (silences its warnings)
+│  ├─ gpython.py             single import point for g_python (silences its warnings)
+│  ├─ assets/logo.png        the logo, for the settings window (same file as the docs logo)
+│  └─ settings/              the settings window that G-Earth's ▶ button opens
+│     ├─ host.py             SettingsHost: runs the window on the main thread; BotBridge
+│     ├─ window.py           SettingsWindow (Tkinter), run_window()
+│     ├─ widgets.py          Habbo-style controls: Pill, Stepper, Chips, ForumButton, Box…
+│     ├─ schema.py           pages, boxes and fields shown (data only)
+│     ├─ configfile.py       read/write config.toml, keeping comments (tomlkit)
+│     ├─ theme.py            colours, fonts, DPI and bring-to-front helpers
+│     └─ __main__.py         preview without G-Earth: python -m bobba_buddy.settings
 ├─ scripts/
 │  ├─ smoke_claude.py        one live Claude call per command (~$0.02)
 │  ├─ install_gearth.py      registers the bot in G-Earth's Extensions list (macOS, Windows, Linux)
@@ -87,6 +96,7 @@ Helpers: `walk_targets()`, `free_neighbours()`, `is_player_near_owner()`, `cheby
 - **`memory.py`:** `ConversationMemory`, which keeps the last `max_turns` Q&A pairs per user and expires them after `ttl_s`.
 - **`config.py`:** dataclasses per section, `parse_config()` (rejects unknown keys and wrong types), and `ConfigStore` (hot reload).
 - **`guard.py`:** `guarded()`, `report_bad_packet()` (log once and save the whole packet), `configure_dump_dir()`.
+- **`settings/`:** the settings window. `schema.PAGES` lists what it shows; `configfile.save_values()` validates and writes `config.toml`; `host.SettingsHost` runs the window on the main thread. See [How the bot works](01-how-the-bot-works.md#settings-window).
 
 ## Configuration
 
@@ -140,6 +150,7 @@ Every module, class and function has a **Google-style** docstring (`Args:`, `Ret
 | `test_avatar.py` | Copying, autopilot, anti-idle, live `UserUpdate` capture, strict vs default mode |
 | `test_protocol.py` | Packet round trips, live `Users` captures, tolerant parsing |
 | `test_textfmt.py`, `test_commands_prompts.py`, `test_config.py`, `test_state.py`, `test_llm.py`, `test_guard.py` | The individual modules |
+| `test_settings_*.py` | The settings window: saving with comments kept, every config key shown, the main-thread host, and the window itself (skipped without a display) |
 | `test_install_gearth.py` | The installer on macOS, Windows and Linux: finding a running G-Earth, the folder search, `--gearth-dir`, virtualenv paths |
 
 Real packets captured from the live client are used as fixtures (`LIVE_USER_UPDATE`, `LIVE_BOT_ENTRY`, `LIVE_PLAYER_PACKET`). When the client changes again, add the new capture as a test first.
@@ -154,8 +165,9 @@ This is how `expression_weight`, `sign_weight` and `look_weight` were added:
    - add an option in `_autopilot_action()`
    - if it's a new packet type, add it to `ACTION_PACKETS` and `HOW_TO_UNLOCK`
 4. **Config files:** add the key to `config.toml` and `config.example.toml`.
-5. **Tests:** add a test in `test_avatar.py`; `run_autopilot()` helps here.
-6. **Run checks:** `uv run pytest && uv run ruff check .`, then restart the bot.
+5. **Settings window:** add a `Field` to the "How often each action" box in `settings/schema.py` (`test_settings_schema.py` fails until every config key is shown or listed in `HIDDEN`).
+6. **Tests:** add a test in `test_avatar.py`; `run_autopilot()` helps here.
+7. **Run checks:** `uv run pytest && uv run ruff check .`, then restart the bot.
 
 ## Adding a chat command
 
@@ -163,4 +175,5 @@ This is how `expression_weight`, `sign_weight` and `look_weight` were added:
 2. **`commands.py`:** add a `CommandSpec` to `SPECS`.
 3. **`prompts.py`:** add an entry to `ADDENDA`, and handle it in `build_user_message()`.
 4. **Config files:** add a `[commands.<name>]` section.
-5. **Tests:** add tests in `test_commands_prompts.py` and `test_bot.py`.
+5. **Settings window:** add a `_command(...)` box to the Commands page in `settings/schema.py`, and list the keys it doesn't use in `HIDDEN`.
+6. **Tests:** add tests in `test_commands_prompts.py` and `test_bot.py`.

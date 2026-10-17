@@ -566,3 +566,15 @@ class ConfigStore:
             if self.on_reload:
                 self.on_reload(config)
         return config
+
+    def reload_now(self) -> Config:
+        """Check the file right away instead of waiting for ``check_interval_s``.
+
+        Used after the settings window saves, so a change applies immediately.
+
+        Returns:
+            The newest valid configuration.
+        """
+        with self._lock:
+            self._next_check = float("-inf")
+        return self.get()
