@@ -274,7 +274,7 @@ uv run --no-project --with pymupdf python scripts/make_icons.py   # only when th
 
 Logs go to `logs/bobba-buddy.log` in the project folder (rotating, about 6 MB kept). The settings window's Extension Logs page shows the same lines live.
 
-**Versioning.** Current version: **1.4.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.4.1**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 

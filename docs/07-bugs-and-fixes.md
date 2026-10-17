@@ -157,3 +157,8 @@ Lesson: compare a real captured packet against the layout before blaming the too
 - **Cause:** the status text was laid out before the buttons, and "Paused · 1 new below" is wider than "Following latest", so the buttons got what was left.
 - **Fix:** the buttons keep their full size, the status text is shorter, and on a narrow window the status moves to its own row above the buttons. Checked at the default and the minimum window width, paused and following.
 
+### 28. The Dock showed Python's icon after reopening the window (macOS)
+- **Symptom:** the first ▶ showed the Bobba Buddy logo in the Dock; closing the window and pressing ▶ again showed the Python rocket.
+- **Cause:** closing hides the Dock icon (`hide_from_dock()`, activation policy "accessory"). Reopening makes the app a regular Dock app again (`activate_app()`), and macOS rebuilds the Dock tile from the app bundle's icon, which is Python.app's. The logo had been set before that switch.
+- **Fix:** `bring_to_front()` sets the logo again right after `activate_app()`, and once more 150 ms later when macOS has finished switching. Checked by opening the window twice in one process and capturing the Dock each time.
+

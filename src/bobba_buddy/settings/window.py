@@ -146,6 +146,7 @@ class SettingsWindow:
             if th.scale < 1.75:
                 self._logo_small = self._logo.subsample(2)
             root.iconphoto(True, self._logo)
+            root.bobba_icon = self._logo  # re-applied by bring_to_front()
 
         self._build_header()
         self._build_footer()
@@ -575,6 +576,20 @@ def bring_to_front(root: tk.Tk, float_s: float = 10.0) -> None:
     root.deiconify()
     root.lift()
     activate_app()
+    # Making the app a normal Dock app again (after hide_from_dock() on a previous
+    # close) resets the Dock icon to Python's, so set the logo again, now and once
+    # macOS has finished switching.
+    icon = getattr(root, "bobba_icon", None)
+    if icon is not None:
+
+        def set_icon() -> None:
+            try:
+                root.iconphoto(True, icon)
+            except tk.TclError:
+                pass  # window already closed
+
+        set_icon()
+        root.after(150, set_icon)
     root.attributes("-topmost", True)
     root.focus_force()
 
