@@ -6,7 +6,8 @@ listed in :data:`HIDDEN`; a test checks that, so a new config key can't be forgo
 Attributes:
     PAGES (tuple[Page, ...]): The sidebar pages, in order (About is added by the window).
     HIDDEN (frozenset[tuple[str, str]]): Config keys deliberately left out of the window.
-    PAGE_ICONS (dict[str, str]): Tabler icon name per sidebar page, About included.
+    PAGE_ICONS (dict[str, str]): Tabler icon name per sidebar page, Extension Logs and About
+        included.
     BOX_ICONS (dict[str, str]): Tabler icon name per box title. The PNGs are made by
         ``scripts/make_icons.py``.
 """
@@ -484,6 +485,7 @@ PAGE_ICONS: dict[str, str] = {
     "Claude": "sparkles",
     "Budget": "coin",
     "Advanced": "adjustments",
+    "Extension Logs": "terminal-2",
     "About": "info-circle",
 }
 
@@ -508,6 +510,7 @@ BOX_ICONS: dict[str, str] = {
     "Packet safety": "shield-check",
     "Pricing (USD)": "receipt",
     "Room loading": "home",
+    "Extension Logs": "terminal",
     "About Bobba Buddy": "info-circle",
 }
 

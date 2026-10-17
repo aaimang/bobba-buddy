@@ -62,6 +62,13 @@ Also from your own G-Earth folder (`~/Library/Application Support/G-Earth/` on m
 
 [billsonnn/nitro-renderer](https://github.com/billsonnn/nitro-renderer) and [billsonnn/nitro-react](https://github.com/billsonnn/nitro-react): `FloodControlParser`, `RoomUnitChatParser`, and the 100-character chat input limit.
 
+## Settings window
+
+- **G-ExtensionStore** (built into G-Earth, `G-Earth/src/main/resources/gearth/services/internal_extensions/extensionstore/application/webview/`): `css/buttons.css` and `layout.css` for the Habbo forum look: black outlines, chunky buttons with a darker bottom edge, and the banner and panel colours.
+- **[Tabler Icons](https://tabler.io/icons)** 3.19.0 (MIT): the sidebar, box header and toolbar icons, rendered to PNG by `scripts/make_icons.py` (Tk 8.6 can't draw SVG).
+- **G-Earth's extension runner** (`NormalExtensionRunner.java`, `StoreExtensionTools.java`): why a `.DS_Store` *file* in `Extensions/` crashes G-Earth while a *folder* of that name is skipped.
+- **Tk on macOS:** `wm iconphoto` sets the Dock icon; the app name comes from `CFBundleName` in the bundle info, read when the app starts up.
+
 ## Claude API
 
 - **Anthropic Python SDK** `anthropic` 1.x: `messages.create`, `output_config.effort`, typed errors, `usage.server_tool_use.web_search_requests`.

@@ -623,6 +623,9 @@ class BobbaBuddy:
             route: Where the reply goes.
             is_owner: Whether the owner sent it (skips the whitelist).
         """
+        log.debug(
+            "%s from %s via %s: %r", command.name, asker, route.mode.name.lower(), command.arg[:80]
+        )
         cfg = self._config()
         if not self.enabled:
             return
@@ -704,6 +707,7 @@ class BobbaBuddy:
             return
 
         try:
+            log.debug("%s from %s queued (%d pending)", command.name, asker, self._pending)
             self._executor.submit(self._work, command, asker, route, target, ticket)
         except RuntimeError:  # executor already shut down
             with self._pending_lock:
@@ -745,6 +749,12 @@ class BobbaBuddy:
                 target_motto=target.motto if target else None,
             )
             history = self.memory.history(asker, cfg.memory.ttl_s) if spec.uses_memory else []
+            log.debug(
+                "calling %s for %s (search %s)",
+                cfg.claude.model,
+                command.name,
+                "on" if cmd_cfg.web_search else "off",
+            )
             reply = self._responder.respond(
                 system=system_prompt(command.name, cmd_cfg.max_chars),
                 messages=[*history, {"role": "user", "content": user_message}],
@@ -851,6 +861,7 @@ class BobbaBuddy:
         if target:
             limit -= ulen(target) + 1  # the target name shares the 100-char budget
         bubbles = split_bubbles(text, max(limit, 20), max_bubbles)
+        log.debug("reply to %s: %d bubble(s) via %s", route.asker, len(bubbles), mode.name.lower())
         generation = self.room.generation
         self.outbox.enqueue([Bubble(mode, b, target, generation) for b in bubbles])
 

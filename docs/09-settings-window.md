@@ -2,14 +2,14 @@
 
 [← Contents](MAIN_CONTENT.md)
 
-Since 1.3.0, every option in `config.toml` can be changed from a Habbo-style window instead of editing the file. It works on macOS, Windows and Linux.
+Since 1.3.0, every option in `config.toml` can be changed from a Habbo-style window instead of editing the file, and since 1.4.0 it also shows the bot's log live. It works on macOS, Windows and Linux.
 
 ![The settings window on the Commands page: yellow header with the logo and the BOT ON/OFF switch, the page list on the left, and boxes of switches, text boxes and −/+ numbers](images/settings-commands.png)
 
 ## Opening it
 
 - **From G-Earth:** press **▶** next to Bobba Buddy in the Extensions tab. Pressing ▶ again while the window is open brings it to the front instead of opening a second one.
-- **Without G-Earth** (to look around or edit `config.toml`): run `uv run python -m bobba_buddy.settings`. Add `--page Avatar` to open on a page. The ON/OFF switch and status line are simulated in this mode, but Save writes the real file.
+- **Without G-Earth** (to look around or edit `config.toml`): run `uv run python -m bobba_buddy.settings`. Add `--page Avatar` to open on a page, or `--page "Extension Logs" --demo-logs` to see the log page with sample lines. The ON/OFF switch and status line are simulated in this mode, but Save writes the real file.
 
 Closing the window doesn't stop the bot. It keeps running in G-Earth.
 
@@ -29,6 +29,7 @@ Closing the window doesn't stop the bot. It keeps running in G-Earth.
 | **Claude** | Model, thinking effort, max tokens, timeout, retries, searches per `/q`, and `/q` memory. |
 | **Budget** | Daily budget and question length; the number of Claude calls at once and the queue size (these two apply after the extension restarts). |
 | **Advanced** | Chat timing and bubble style, packet safety (`require_seen_packets`), the prices used for the budget, and the room reload packet. |
+| **Extension Logs** | The bot's log, live, in a terminal view (since 1.4.0). See [Extension Logs](#extension-logs) below. |
 | **About** | The logo, version, GitHub and docs links, and the fan-project disclaimer. |
 
 ![Whitelist page](images/settings-whitelist.png)
@@ -45,6 +46,8 @@ Closing the window doesn't stop the bot. It keeps running in G-Earth.
 
 ![About page: logo, version, GitHub and docs buttons](images/settings-about.png)
 
+Save and Revert only appear on the pages with settings; About and Extension Logs don't have them.
+
 ## Controls
 
 | Control | How it works |
@@ -56,9 +59,31 @@ Closing the window doesn't stop the bot. It keeps running in G-Earth.
 | **Choice** | Thinking effort: click one of `low` … `max`. |
 | **Chips** | Wake-up actions: click to turn each one on or off. They're tried in the order shown. |
 
+## Extension Logs
+
+For debugging: what the bot is doing right now, line by line, as it happens. It shows the same lines the bot writes to `logs/bobba-buddy.log` in the project folder, kept in memory (the last 2,000), so lines from before you opened the window are there too.
+
+![Extension Logs page: a dark terminal with coloured log levels, level chips, a text filter, the Auto-scroll switch, and Debug, Copy, Clear and Open log file buttons](images/settings-extension-logs.png)
+
+Each line shows the time (to the millisecond), the level, the thread and the part of the bot that logged it, then the message. Levels are coloured: DEBUG grey, INFO blue, WARN amber, ERROR red.
+
+| Control | What it does |
+|---|---|
+| **Auto-scroll** | ON (the default) keeps the newest line in view; the status shows "● Following latest". Scrolling up to read turns it OFF and the status shows "❚❚ Paused · N new" as lines keep arriving; scroll back to the bottom, or switch it ON, to follow again. |
+| **DEBUG / INFO / WARN / ERROR** | Show or hide each level. |
+| **Filter box** | Only show lines containing that text (any case), e.g. a name or `avatar`. |
+| **Debug** | Turns on DEBUG logging in the running bot, for step-by-step detail: each command received and queued, the Claude call, the reply's bubbles, each bubble sent. It goes back to normal when the bot restarts, and `config.toml` doesn't change. The button is yellow while it's on. |
+| **Copy** | Copies the lines shown, e.g. to paste into a bug report. |
+| **Clear** | Empties the view. The log file isn't touched. |
+| **Open log file** | Opens `logs/bobba-buddy.log` in your system's default app. |
+
+The status line also counts the lines shown. On a narrow window it moves above the buttons, so nothing is cut off.
+
+To try it without G-Earth, with sample lines: `uv run python -m bobba_buddy.settings --page "Extension Logs" --demo-logs`.
+
 ## Saving
 
-- **Changes wait for Save.** The line next to the buttons counts unsaved changes. Changing a setting back to its saved value removes it from the count.
+- **Changes wait for Save** (on the settings pages). The line next to the buttons counts unsaved changes. Changing a setting back to its saved value removes it from the count.
 - **Save** (or ⌘S on a Mac, Ctrl+S elsewhere) checks everything first, with the same rules the bot uses when it loads `config.toml`. Then it writes the file and the bot applies it straight away, with no 2-second wait. "Claude calls at once" and "Queue size" still need an extension restart, and the window says so.
 - **Your file stays yours.** Only the settings you changed are rewritten. Comments, order and everything else stay as they are. If `config.toml` doesn't exist yet, it's created from `config.example.toml`.
 - **A bad value** (for example two commands with the same prefix, or a longest autopilot wait shorter than the shortest) isn't saved. The window jumps to that setting, turns its name red and explains the problem. The file isn't touched.
@@ -68,6 +93,7 @@ Closing the window doesn't stop the bot. It keeps running in G-Earth.
 
 ## Good to know
 
-- **On macOS** the window floats above other apps until you click into it, because a background process (the bot, started by G-Earth) isn't always allowed to take focus. While it's open it shows the Bobba Buddy logo in the Dock; the icon goes away when you close it.
+- **On macOS** the window floats above other apps until you click into it, because a background process (the bot, started by G-Earth) isn't always allowed to take focus. While it's open it shows the Bobba Buddy logo in the Dock, and the menu bar and Dock say "Bobba Buddy" instead of "Python"; the icon goes away when you close it.
+- **On Windows** the taskbar button shows the logo, not Python's icon (the window gets its own app ID).
 - **On Linux** the window needs Tkinter: `sudo apt install python3-tk` on Debian and Ubuntu. Without it, or without a display, pressing ▶ prints "Settings window unavailable" in the G-Earth console and the bot keeps running. The python.org installers and uv's own Python builds already include Tkinter.
 - **How it's built:** see [How the bot works § Settings window](01-how-the-bot-works.md#settings-window) for the threading, and the `settings/` package in the [Codebase guide](02-codebase-guide.md#layout).

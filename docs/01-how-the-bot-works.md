@@ -119,6 +119,8 @@ G-Earth's ▶ button sends `double_click`. G-Python raises it on a thread of its
 
 - **Saving:** `settings/configfile.py` edits `config.toml` with `tomlkit`, so comments and untouched keys stay as they are. The result is checked with `parse_config()` first and written atomically, then `ConfigStore.reload_now()` applies it without waiting for the 2 s check.
 - **ON/OFF:** the header switch calls `BobbaBuddy.set_enabled()`. Switching on also clears a fatal API error.
+- **Name and icon:** before the first `tk.Tk()`, `theme.name_app()` sets `CFBundleName` in the running Python's in-memory bundle info on macOS (menu bar and Dock read it at app start-up), and an AppUserModelID on Windows (so the taskbar shows the window's logo, not `python.exe`'s).
 - **To the front:** the bot is a background process, so on macOS the window activates the app through the Objective-C runtime and floats on top until it's focused.
 - **No Tkinter** (some Linux installs) or no display: the bot keeps running and prints a notice in the G-Earth console.
+- **Extension Logs:** at startup `logbuffer.install()` adds a logging handler that keeps the last 2,000 records in memory. `emit()` only appends under a lock, so logging from the packet thread stays cheap. The open window polls it every 200 ms on the Tk thread. The Debug button sets the root logger to DEBUG until the bot restarts.
 

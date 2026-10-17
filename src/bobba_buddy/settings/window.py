@@ -8,6 +8,7 @@ talks to the running bot directly.
 Attributes:
     LOGO_PATH (Path): The Bobba Buddy logo shipped inside the package.
     ABOUT (str): Name of the About page.
+    LOGS (str): Name of the Extension Logs page.
 """
 
 from __future__ import annotations
@@ -22,11 +23,20 @@ from tkinter import messagebox
 from typing import Any
 
 from .. import __version__
+from . import logbuffer
 from . import theme as t
 from .configfile import FieldId, config_fields, load_values, save_values
 from .host import Bridge, Done
+from .logview import TITLE, LogView
 from .schema import BOX_ICONS, PAGE_ICONS, PAGES, Field, all_fields
-from .theme import Theme, activate_app, enable_dpi_awareness, hide_from_dock, load_png
+from .theme import (
+    Theme,
+    activate_app,
+    enable_dpi_awareness,
+    hide_from_dock,
+    load_png,
+    name_app,
+)
 from .widgets import (
     Box,
     Chips,
@@ -44,6 +54,7 @@ log = logging.getLogger(__name__)
 
 LOGO_PATH = Path(__file__).resolve().parent.parent / "assets" / "logo.png"
 ABOUT = "About"
+LOGS = TITLE
 _ERROR_KEY = re.compile(r"\[([\w.]+)\] (\w+)")
 
 
@@ -142,11 +153,11 @@ class SettingsWindow:
         for p in PAGES:
             self._build_page(p.name, p.boxes)
         self._build_about()
-        self.show_page(page if page in self._pages else PAGES[0].name)
+        self.show_page(page if page in self._pages or page == LOGS else PAGES[0].name)
 
-        root.bind_all("<MouseWheel>", self._scroll.wheel)
-        root.bind_all("<Button-4>", self._scroll.wheel)
-        root.bind_all("<Button-5>", self._scroll.wheel)
+        root.bind_all("<MouseWheel>", self._wheel)
+        root.bind_all("<Button-4>", self._wheel)
+        root.bind_all("<Button-5>", self._wheel)
         root.bind_all(
             "<Command-s>" if root.tk.call("tk", "windowingsystem") == "aqua" else "<Control-s>",
             lambda _e: self.save(),
@@ -196,7 +207,7 @@ class SettingsWindow:
         th = self.th
         body = tk.Frame(self.root, bg=t.PANEL)
         body.pack(fill="both", expand=True)
-        names = [p.name for p in PAGES] + [ABOUT]
+        names = [p.name for p in PAGES] + [LOGS, ABOUT]
         icons = {name: th.icon(PAGE_ICONS.get(name, ""), "nav") for name in names}
         self._sidebar = Sidebar(body, th, names, self.show_page, icons)
         self._sidebar.pack(side="left", fill="y")
@@ -205,7 +216,7 @@ class SettingsWindow:
         content = tk.Frame(body, bg=t.PANEL)
         content.pack(side="left", fill="both", expand=True)
 
-        actions = tk.Frame(content, bg=t.PANEL, padx=th.px(10), pady=th.px(8))
+        self._actions = actions = tk.Frame(content, bg=t.PANEL, padx=th.px(10), pady=th.px(8))
         actions.pack(side="bottom", fill="x")
         ForumButton(actions, th, "Save", self.save, color="yellow").pack(side="right")
         ForumButton(actions, th, "Revert", self.revert).pack(side="right", padx=th.px(8))
@@ -223,6 +234,7 @@ class SettingsWindow:
 
         self._scroll = ScrollArea(content, t.PANEL)
         self._scroll.pack(fill="both", expand=True, padx=(th.px(10), 0), pady=(th.px(10), 0))
+        self._logs = LogView(content, th, logbuffer.current())
 
     def _build_footer(self) -> None:
         """Bottom strip: version, tagline and the GitHub link."""
@@ -358,12 +370,30 @@ class SettingsWindow:
         """
         if name == self.page:
             return
-        if self.page:
+        th = self.th
+        if self.page == LOGS:
+            self._logs.pack_forget()
+            self._scroll.pack(fill="both", expand=True, padx=(th.px(10), 0), pady=(th.px(10), 0))
+        elif self.page:
             self._pages[self.page].pack_forget()
-        self._pages[name].pack(fill="x")
+        # Save and Revert only where there are settings to change.
+        if name in (LOGS, ABOUT):
+            self._actions.pack_forget()
+        elif not self._actions.winfo_manager():  # hidden by About or Extension Logs
+            self._actions.pack(side="bottom", fill="x", before=self._scroll)
+        if name == LOGS:
+            self._scroll.pack_forget()  # the terminal fills the whole area
+            self._logs.pack(fill="both", expand=True, padx=th.px(10), pady=th.px(10))
+        else:
+            self._pages[name].pack(fill="x")
+            self._scroll.to_top()
         self.page = name
         self._sidebar.select(name)
-        self._scroll.to_top()
+
+    def _wheel(self, event: tk.Event) -> None:
+        """Mouse wheel: scroll the settings page (the log terminal scrolls itself)."""
+        if self.page != LOGS:
+            self._scroll.wheel(event)
 
     def _changed(self, fid: FieldId, value: Any) -> None:
         """A control changed: track it as pending unless it's back to the saved value."""
@@ -523,7 +553,9 @@ def destroy(root: tk.Tk) -> None:
     """
     try:
         for timer in root.tk.splitlist(root.tk.call("after", "info")):
-            root.after_cancel(timer)
+            # Tcl-level cancel: after_cancel() also deletes the callback's command, which
+            # fails for timers other widgets registered (destroy() cleans those up).
+            root.tk.call("after", "cancel", timer)
         root.destroy()
     except tk.TclError:
         pass  # already closed
@@ -581,6 +613,7 @@ def run_window(
         tkinter.TclError: If no window can be created (no display).
     """
     enable_dpi_awareness()
+    name_app()
     root = tk.Tk(className="BobbaBuddy")
     try:
         SettingsWindow(root, bridge, config_path, example_path, page=page)

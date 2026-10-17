@@ -29,5 +29,7 @@ Generated from the Google-style docstrings in ``src/bobba_buddy``.
    bobba_buddy.settings.widgets
    bobba_buddy.settings.schema
    bobba_buddy.settings.configfile
+   bobba_buddy.settings.logbuffer
+   bobba_buddy.settings.logview
    bobba_buddy.settings.theme
    bobba_buddy.settings.__main__

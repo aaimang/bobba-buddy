@@ -183,3 +183,12 @@ def test_theme_icons(win):
     assert win.th.icon("users", "nav") is win.th.icon("users", "nav")  # cached
     assert win.th.icon("no-such-icon") is None
     assert win.th.icon("") is None
+
+
+def test_name_app_is_safe_everywhere(monkeypatch):
+    from bobba_buddy.settings import theme
+
+    theme.name_app()  # real call on this OS: must never raise
+    for platform in ("linux", "win32", "darwin"):
+        monkeypatch.setattr(theme.sys, "platform", platform)
+        theme.name_app("Bobba Buddy")  # wrong-OS calls fail inside and are ignored

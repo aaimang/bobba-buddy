@@ -14,7 +14,7 @@ Documentation for the Habbo AIR chat and avatar bot that runs as a G-Earth exten
 | 6 | [G-Earth requirements](06-gearth-requirements.md) | G-Earth versions, packet safety and Developer mode, the extension protocol, running Python and Java extensions |
 | 7 | [Bugs and fixes](07-bugs-and-fixes.md) | Every problem hit while building this bot, its cause, the workaround and the fix |
 | 8 | [Sources and repositories](08-sources-and-repos.md) | The GitHub repos, files and APIs used to learn G-Python, G-Earth, G-Rust and the packet layouts |
-| 9 | [Settings window](09-settings-window.md) | A tour of the window G-Earth's ▶ button opens, with screenshots of every page; saving, errors and platform notes |
+| 9 | [Settings window](09-settings-window.md) | A tour of the window G-Earth's ▶ button opens, with screenshots of every page; saving, errors, the live Extension Logs, and platform notes |
 
 **API reference (Sphinx).** `docs/sphinx/` builds an HTML site that combines these guides with a reference generated from the code's Google-style docstrings. To build it:
 
@@ -31,6 +31,7 @@ Then open `docs/sphinx/_build/html/index.html`. The published copy is at https:/
   - change how the bot talks → [Codebase guide § Prompts](02-codebase-guide.md#prompts-and-tone)
   - send a packet by hand → [Reading packets § G-Earth expressions](05-reading-packets.md#g-earth-packet-expressions)
   - add a new avatar action → [Codebase guide § Adding an avatar action](02-codebase-guide.md#adding-an-avatar-action)
+  - see what the bot is doing right now → [Settings window § Extension Logs](09-settings-window.md#extension-logs)
 - **Something broke:**
   - a file appeared in `logs/bad-packets/` → [Reading packets § Decoding a bad-packet dump](05-reading-packets.md#decoding-a-bad-packet-dump)
   - actions don't show up → [G-Earth requirements § Packet safety](06-gearth-requirements.md#packet-safety-and-developer-mode)
@@ -48,6 +49,7 @@ Each version below has a git tag (`v1.2.2` and so on), except 1.1.1 and 1.1.2: t
 
 | Version | Contents |
 |---|---|
+| `v1.4.0` | **Extension Logs** page in the settings window: the bot's log live in a terminal view (last 2,000 lines kept in memory) with coloured levels, level chips, a text filter, Auto-scroll (on by default, pauses when you scroll up), a Debug switch (DEBUG logging until restart), Copy, Clear and Open log file. New DEBUG lines trace each command through queueing, the Claude call, the reply and each bubble sent. Save and Revert are hidden on About and Extension Logs; the log page's status bar wraps to two rows on a narrow window. The window shows as "Bobba Buddy" instead of "Python" in the macOS menu bar and Dock, and with the logo on the Windows taskbar. Fix: closing the window could leave it half-open when another widget had a timer pending. |
 | `v1.3.3` | Fix: G-Earth's window stopped opening again because Finder recreated `.DS_Store` in the `Extensions` folder. On macOS `install_gearth.py` now leaves an empty `.DS_Store` folder there, which Finder can't overwrite and G-Earth skips. |
 | `v1.3.2` | Settings window icons, as in the design mockup: one per sidebar page and box header, plus GitHub marks on the About button and footer link ([Tabler](https://tabler.io/icons) icons, MIT, as PNGs in `assets/icons/`, made by `scripts/make_icons.py`). Logo and icon loading share one tolerant loader. New screenshots in the README and the settings guide. |
 | `v1.3.1` | Fix: the settings window could fail to open on Windows when Tk couldn't create the logo image (an empty `TclError`, seen in CI). The logo is now loaded from memory with one retry, and the window opens without it if it still fails. The docs build installs Tkinter on Ubuntu. |

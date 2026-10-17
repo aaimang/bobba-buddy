@@ -177,6 +177,7 @@ class Outbox:
                     log.debug("dropping stale bubble from a previous room")
                     continue
                 self._send(bubble)
+                log.debug("sent %s bubble (%d chars)", bubble.mode.name.lower(), len(bubble.text))
                 with self._lock:
                     self._last_sent = self._clock()
             except Exception:  # never let one bad send kill the sender thread

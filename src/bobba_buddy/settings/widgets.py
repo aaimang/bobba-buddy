@@ -420,6 +420,7 @@ class ForumButton(tk.Frame):
         *,
         color: str = "grey",
         icon: tk.PhotoImage | None = None,
+        small: bool = False,
     ) -> None:
         """Create the button.
 
@@ -430,6 +431,7 @@ class ForumButton(tk.Frame):
             command: Called on click (press and release inside the button).
             color: ``yellow``, ``grey`` or ``blue``.
             icon: Optional image left of the text.
+            small: Smaller text and padding, for toolbars.
         """
         super().__init__(parent, bg=t.BLACK)
         self._base, self._hover, self._down, fg = self.COLORS[color]
@@ -438,11 +440,11 @@ class ForumButton(tk.Frame):
             text=f" {text}" if icon else text,  # Tk has no gap option for compound
             image=icon or "",
             compound="left",
-            font=th.font(13, bold=True),
+            font=th.font(11 if small else 13, bold=True),
             bg=self._base,
             fg=fg,
-            padx=th.px(14),
-            pady=th.px(3),
+            padx=th.px(8 if small else 14),
+            pady=th.px(1 if small else 3),
             cursor="hand2",
         )
         self._label.pack(padx=th.px(2), pady=(th.px(2), th.px(3)))
@@ -464,6 +466,15 @@ class ForumButton(tk.Frame):
     def invoke(self) -> None:
         """Run the command, as a click would."""
         self._command()
+
+    def set_color(self, color: str) -> None:
+        """Change the colour, e.g. yellow while a toggle is on.
+
+        Args:
+            color: ``yellow``, ``grey`` or ``blue``.
+        """
+        self._base, self._hover, self._down, fg = self.COLORS[color]
+        self._label.configure(bg=self._base, fg=fg)
 
 
 class Box(tk.Frame):

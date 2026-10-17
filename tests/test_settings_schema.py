@@ -73,8 +73,9 @@ def _make_icons():
 
 
 def test_every_page_and_box_has_an_icon():
-    titles = {box.title for page in PAGES for box in page.boxes} | {"About Bobba Buddy"}
-    assert set(PAGE_ICONS) == {p.name for p in PAGES} | {"About"}
+    titles = {box.title for page in PAGES for box in page.boxes}
+    titles |= {"Extension Logs", "About Bobba Buddy"}
+    assert set(PAGE_ICONS) == {p.name for p in PAGES} | {"Extension Logs", "About"}
     assert titles <= set(BOX_ICONS)
 
 
@@ -83,6 +84,8 @@ def test_icon_pngs_exist_in_both_sizes():
     icon_dir = ROOT / "src" / "bobba_buddy" / "assets" / "icons"
     wanted = [(n, "nav") for n in PAGE_ICONS.values()] + [(n, "box") for n in BOX_ICONS.values()]
     wanted += [("brand-github", "link"), ("brand-github", "white")]
+    tools = ("filter", "search", "arrow-bar-to-down", "bug", "copy", "trash", "file-text")
+    wanted += [(name, "tool") for name in tools]  # Extension Logs toolbar
     for name, variant in wanted:
         assert name in make_icons.ICONS[variant], (name, variant)
         size = make_icons.VARIANTS[variant][1]

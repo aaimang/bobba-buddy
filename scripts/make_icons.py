@@ -30,9 +30,19 @@ VARIANTS = {
     "box": ("#3a2a00", 16),  # yellow box headers
     "link": ("#185c75", 14),  # footer link
     "white": ("#ffffff", 14),  # on the blue GitHub button
+    "tool": ("#2a3a42", 14),  # toolbar buttons and labels on the Extension Logs page
 }
 
-PAGE_ICONS = ("users", "message-circle", "walk", "door", "sparkles", "coin", "adjustments")
+PAGE_ICONS = (
+    "users",
+    "message-circle",
+    "walk",
+    "door",
+    "sparkles",
+    "coin",
+    "adjustments",
+    "terminal-2",
+)
 BOX_ICONS = (
     "users",
     "message-question",
@@ -55,12 +65,15 @@ BOX_ICONS = (
     "receipt",
     "home",
     "info-circle",
+    "terminal",
 )
+TOOL_ICONS = ("filter", "search", "arrow-bar-to-down", "bug", "copy", "trash", "file-text")
 ICONS = {
     "nav": (*PAGE_ICONS, "info-circle"),
     "box": BOX_ICONS,
     "link": ("brand-github",),
     "white": ("brand-github",),
+    "tool": TOOL_ICONS,
 }
 
 

@@ -34,7 +34,7 @@ from .config import ConfigError, ConfigStore
 from .gpython import Extension
 from .guard import configure_dump_dir
 from .llm import ClaudeResponder
-from .settings import BotBridge, SettingsHost
+from .settings import BotBridge, SettingsHost, logbuffer
 
 log = logging.getLogger("bobba_buddy")
 
@@ -235,6 +235,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # When G-Earth launches us, stdout may never be drained, so log to file only.
     setup_logging(project_dir / "logs", args.log_level, console=not launched_by_gearth)
+    logbuffer.install(project_dir / "logs" / "bobba-buddy.log")  # Extension Logs page
     configure_dump_dir(project_dir / "logs" / "bad-packets")
     load_dotenv(project_dir / ".env")
 

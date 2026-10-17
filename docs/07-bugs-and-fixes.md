@@ -129,3 +129,31 @@ Lesson: compare a real captured packet against the layout before blaming the too
 - **Cause:** Finder writes a hidden `.DS_Store` into every folder you open. G-Earth 1.5.4 tries to start **every** entry in `Extensions/` as an extension. `.DS_Store` has no launch command, so JavaFX's start-up crashes with a `NullPointerException` (`ExecutionInfo.getExecutionCommand(String)` returns `null`) before the window is shown.
 - **Fix:** delete the file (`rm "$HOME/Library/Application Support/G-Earth/Extensions/.DS_Store"`). Since 1.2.3, `scripts/install_gearth.py` removes a stray `.DS_Store` from `Extensions/` and from its own extension folder on every run, including `--uninstall` (`--dry-run` only reports it). Other extensions' folders aren't touched.
 - **It came back (1.3.3):** Finder rewrites the file every time the folder is viewed, so G-Earth broke again after a reinstall. On macOS the installer now also leaves an **empty folder** named `.DS_Store` in `Extensions/`. Finder can't write its file over a folder. G-Earth starts folders through their `command.txt` (`StoreExtensionTools.executeExtension`); with none, it logs the `IOException` and carries on. Its store's "Installed" tab ignores folder names without `_`, so the folder doesn't show up anywhere.
+
+## Settings window
+
+### 23. The window failed to open on Windows CI (1.3.1)
+- **Symptom:** one settings-window test failed on the Windows runner now and then, with an empty `TclError` from `tk.PhotoImage(file=…)` while loading the logo. The same commit passed on a rerun.
+- **Cause:** creating an image on Windows Tk occasionally fails after several Tk windows have been made in one process. A real user could hit it too, and the window wouldn't open.
+- **Fix:** `theme.load_png()` reads the PNG in Python and hands Tk the bytes, retries once, and returns `None` on failure; the window then opens without that picture. A test forces the failure.
+
+### 24. The docs build couldn't import the window (1.3.1)
+- **Symptom:** the Docs workflow failed with `ModuleNotFoundError: No module named 'tkinter'` for `theme`, `widgets` and `window`.
+- **Cause:** Ubuntu's system Python, used by the runner, ships without Tkinter.
+- **Fix:** `docs.yml` installs `python3-tk` before building.
+
+### 25. Closing the window left it half-open (1.4.0)
+- **Symptom:** during development, the full test run hung on a settings-window test.
+- **Cause:** `destroy()` cancels pending Tk timers before closing (they outlive the window). It used `root.after_cancel()`, which also deletes the timer's Tcl command and fails with "can't delete Tcl command" for timers another widget registered, like the Extension Logs page's 200 ms poll. The error skipped `root.destroy()`, so the window stayed alive.
+- **Fix:** cancel timers at the Tcl level (`after cancel <id>`); the window's own destroy removes the commands.
+
+### 26. "Open log file" did nothing at startup (1.4.0)
+- **Symptom:** the button reported "no log file yet" even though the file existed.
+- **Cause:** `LogBuffer` defines `__len__`, so an empty buffer counts as false, and `if self._buffer` treated it as missing.
+- **Fix:** check `self._buffer is not None` everywhere.
+
+### 27. Extension Logs buttons squeezed when paused (1.4.0)
+- **Symptom:** with Auto-scroll OFF, the Debug button in the bottom bar was cut off.
+- **Cause:** the status text was laid out before the buttons, and "Paused · 1 new below" is wider than "Following latest", so the buttons got what was left.
+- **Fix:** the buttons keep their full size, the status text is shorter, and on a narrow window the status moves to its own row above the buttons. Checked at the default and the minimum window width, paused and following.
+

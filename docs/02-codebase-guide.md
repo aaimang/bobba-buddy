@@ -38,6 +38,8 @@ bobba-buddy/
 │     ├─ widgets.py          Habbo-style controls: Pill, Stepper, Chips, ForumButton, Box…
 │     ├─ schema.py           pages, boxes and fields shown (data only)
 │     ├─ configfile.py       read/write config.toml, keeping comments (tomlkit)
+│     ├─ logbuffer.py        keeps the latest log lines in memory (LogBuffer handler)
+│     ├─ logview.py          the Extension Logs page (LogView terminal)
 │     ├─ theme.py            colours, fonts, DPI and bring-to-front helpers
 │     └─ __main__.py         preview without G-Earth: python -m bobba_buddy.settings
 ├─ scripts/
@@ -98,7 +100,7 @@ Helpers: `walk_targets()`, `free_neighbours()`, `is_player_near_owner()`, `cheby
 - **`memory.py`:** `ConversationMemory`, which keeps the last `max_turns` Q&A pairs per user and expires them after `ttl_s`.
 - **`config.py`:** dataclasses per section, `parse_config()` (rejects unknown keys and wrong types), and `ConfigStore` (hot reload).
 - **`guard.py`:** `guarded()`, `report_bad_packet()` (log once and save the whole packet), `configure_dump_dir()`.
-- **`settings/`:** the settings window. `schema.PAGES` lists what it shows; `configfile.save_values()` validates and writes `config.toml`; `host.SettingsHost` runs the window on the main thread. See [How the bot works](01-how-the-bot-works.md#settings-window).
+- **`settings/`:** the settings window. `schema.PAGES` lists what it shows; `configfile.save_values()` validates and writes `config.toml`; `host.SettingsHost` runs the window on the main thread; `logbuffer.install()` (called at startup) feeds the Extension Logs page. See [How the bot works](01-how-the-bot-works.md#settings-window).
 
 ## Configuration
 
@@ -152,7 +154,7 @@ Every module, class and function has a **Google-style** docstring (`Args:`, `Ret
 | `test_avatar.py` | Copying, autopilot, anti-idle, live `UserUpdate` capture, strict vs default mode |
 | `test_protocol.py` | Packet round trips, live `Users` captures, tolerant parsing |
 | `test_textfmt.py`, `test_commands_prompts.py`, `test_config.py`, `test_state.py`, `test_llm.py`, `test_guard.py` | The individual modules |
-| `test_settings_*.py` | The settings window: saving with comments kept, every config key shown, the main-thread host, and the window itself (skipped without a display) |
+| `test_settings_*.py` | The settings window: saving with comments kept, every config key shown and every icon present, the main-thread host, the Extension Logs buffer and page, and the window itself (skipped without a display) |
 | `test_install_gearth.py` | The installer on macOS, Windows and Linux: finding a running G-Earth, the folder search, `--gearth-dir`, virtualenv paths |
 
 Real packets captured from the live client are used as fixtures (`LIVE_USER_UPDATE`, `LIVE_BOT_ENTRY`, `LIVE_PLAYER_PACKET`). When the client changes again, add the new capture as a test first.

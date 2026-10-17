@@ -22,9 +22,12 @@ Attributes:
     CHIP (str): Selected chip background.
     GITHUB_URL (str): The project's GitHub page.
     DOCS_URL (str): The project's documentation.
+    APP_NAME (str): Shown instead of "Python" in the macOS menu bar and Dock.
+    WINDOWS_APP_ID (str): AppUserModelID, so Windows shows the logo on the taskbar.
     ICON_DIR (Path): The Tabler icon PNGs (made by ``scripts/make_icons.py``).
     ICON_SIZES (dict[str, int]): Icon size in design pixels per variant: ``nav``
-        (sidebar), ``box`` (box headers), ``link`` (footer) and ``white`` (blue button).
+        (sidebar), ``box`` (box headers), ``link`` (footer), ``white`` (blue button) and
+        ``tool`` (Extension Logs toolbar).
 """
 
 from __future__ import annotations
@@ -57,11 +60,14 @@ CHIP = "#effeff"
 GITHUB_URL = "https://github.com/aaimang/bobba-buddy"
 DOCS_URL = "https://aaimang.github.io/bobba-buddy/"
 
+APP_NAME = "Bobba Buddy"
+WINDOWS_APP_ID = "aaimang.BobbaBuddy.Settings"
 ICON_DIR = Path(__file__).resolve().parent.parent / "assets" / "icons"
-ICON_SIZES = {"nav": 18, "box": 16, "link": 14, "white": 14}
+ICON_SIZES = {"nav": 18, "box": 16, "link": 14, "white": 14, "tool": 14}
 
 log = logging.getLogger(__name__)
 
+_MONO = {"darwin": "Menlo", "win32": "Consolas"}
 _FALLBACK = {"darwin": "Helvetica Neue", "win32": "Segoe UI"}
 
 
@@ -80,27 +86,96 @@ def enable_dpi_awareness() -> None:
         pass
 
 
-def _ns_app(selector: bytes, arg: Any) -> None:
-    """Send one message to ``NSApp`` through the Objective-C runtime (macOS only).
+def _objc_send(receiver: Any, selector: bytes, *args: Any, argtypes=(), restype=None) -> Any:
+    """Send one Objective-C message through ``ctypes`` (macOS only).
 
     Args:
-        selector: The selector, e.g. ``b"activateIgnoringOtherApps:"``.
-        arg: Its one argument: a ``bool``, or an ``int`` for an ``NSInteger``.
+        receiver: The object or class pointer.
+        selector: The selector, e.g. ``b"sharedApplication"``.
+        *args: The message's arguments.
+        argtypes: ``ctypes`` types of ``args``.
+        restype: ``ctypes`` return type; a pointer by default.
+
+    Returns:
+        The result.
     """
+    import ctypes
+    import ctypes.util
+
+    objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
+    objc.sel_registerName.restype = ctypes.c_void_p
+    objc.sel_registerName.argtypes = [ctypes.c_char_p]
+    p = ctypes.c_void_p
+    fn = ctypes.CFUNCTYPE(restype or p, p, p, *argtypes)(("objc_msgSend", objc))
+    return fn(receiver, objc.sel_registerName(selector), *args)
+
+
+def _objc_class(name: bytes) -> Any:
+    """An Objective-C class pointer by name (macOS only)."""
     import ctypes
     import ctypes.util
 
     objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
     objc.objc_getClass.restype = ctypes.c_void_p
     objc.objc_getClass.argtypes = [ctypes.c_char_p]
-    objc.sel_registerName.restype = ctypes.c_void_p
-    objc.sel_registerName.argtypes = [ctypes.c_char_p]
-    p = ctypes.c_void_p
+    return objc.objc_getClass(name)
+
+
+def _ns_app(selector: bytes, arg: Any) -> None:
+    """Send one message with one argument to ``NSApp`` (macOS only).
+
+    Args:
+        selector: The selector, e.g. ``b"activateIgnoringOtherApps:"``.
+        arg: A ``bool``, or an ``int`` for an ``NSInteger``.
+    """
+    import ctypes
+
+    app = _objc_send(_objc_class(b"NSApplication"), b"sharedApplication")
     arg_type = ctypes.c_bool if isinstance(arg, bool) else ctypes.c_long
-    send = ctypes.CFUNCTYPE(p, p, p)(("objc_msgSend", objc))
-    send_arg = ctypes.CFUNCTYPE(p, p, p, arg_type)(("objc_msgSend", objc))
-    app = send(objc.objc_getClass(b"NSApplication"), objc.sel_registerName(b"sharedApplication"))
-    send_arg(app, objc.sel_registerName(selector), arg)
+    _objc_send(app, selector, arg, argtypes=(arg_type,))
+
+
+def name_app(name: str = APP_NAME) -> None:
+    """Show the window as "Bobba Buddy", not "Python", in the Dock, menu bar and taskbar.
+
+    Must run before the first ``tk.Tk()`` of the process.
+
+    * **macOS:** sets ``CFBundleName`` in the running Python's in-memory bundle info,
+      which the menu bar and Dock read when the app starts up. Only done if that
+      dictionary is mutable, so it can't raise an Objective-C exception.
+    * **Windows:** gives the process its own AppUserModelID, so the taskbar groups the
+      window under the window's icon (the logo) instead of ``python.exe``'s.
+
+    Elsewhere a no-op; failures are ignored (the name just stays "Python").
+
+    Args:
+        name: The app name to show.
+    """
+    try:
+        if sys.platform == "darwin":
+            import ctypes
+
+            ns_string = _objc_class(b"NSString")
+            utf8 = (ctypes.c_char_p,)
+            title = _objc_send(ns_string, b"stringWithUTF8String:", name.encode(), argtypes=utf8)
+            key = _objc_send(ns_string, b"stringWithUTF8String:", b"CFBundleName", argtypes=utf8)
+            bundle = _objc_send(_objc_class(b"NSBundle"), b"mainBundle")
+            info = _objc_send(bundle, b"infoDictionary")
+            mutable = _objc_send(
+                info,
+                b"isKindOfClass:",
+                _objc_class(b"NSMutableDictionary"),
+                argtypes=(ctypes.c_void_p,),
+                restype=ctypes.c_bool,
+            )
+            if info and mutable:
+                _objc_send(info, b"setObject:forKey:", title, key, argtypes=(ctypes.c_void_p,) * 2)
+        elif sys.platform == "win32":
+            import ctypes
+
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(WINDOWS_APP_ID)
+    except Exception:  # cosmetic only
+        pass
 
 
 def activate_app() -> None:
@@ -170,6 +245,7 @@ class Theme:
     Attributes:
         scale: Pixels per design pixel (1.0 on macOS and 100% displays).
         family: The font family in use.
+        mono_family: The monospace family, for the Extension Logs terminal.
     """
 
     def __init__(self, root: tk.Misc) -> None:
@@ -183,6 +259,8 @@ class Theme:
         families = set(tkfont.families(root))
         wanted = ["Ubuntu", _FALLBACK.get(sys.platform, "DejaVu Sans")]
         self.family = next((f for f in wanted if f in families), "TkDefaultFont")
+        mono = _MONO.get(sys.platform, "DejaVu Sans Mono")
+        self.mono_family = mono if mono in families else "TkFixedFont"
         self._fonts: dict[tuple[int, bool], tkfont.Font] = {}
         self._root = root
         self._icons: dict[tuple[str, str], tk.PhotoImage | None] = {}
@@ -216,6 +294,21 @@ class Theme:
             Screen pixels, at least 1 for a non-zero size.
         """
         return max(1, round(n * self.scale)) if n else 0
+
+    def mono(self, size: int = 12) -> tkfont.Font:
+        """A cached monospace font.
+
+        Args:
+            size: Size in design pixels.
+
+        Returns:
+            The font.
+        """
+        key = (-size, False)
+        if key not in self._fonts:
+            points = size if sys.platform == "darwin" else round(size * 0.75)
+            self._fonts[key] = tkfont.Font(family=self.mono_family, size=points)
+        return self._fonts[key]
 
     def font(self, size: int = 13, bold: bool = False) -> tkfont.Font:
         """A cached font.

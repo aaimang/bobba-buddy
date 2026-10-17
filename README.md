@@ -28,6 +28,8 @@ Replies come back the way the question was asked: chat gets chat, shout gets sho
 - **Anti-idle:** your avatar never goes to sleep (Zzz).
 - **Staying in your room:** after a bot restart, or if you end up on the hotel view, it takes you back to your last room. See [Staying in your room](#staying-in-your-room).
 
+**Settings window:** press ▶ next to Bobba Buddy in G-Earth to change any setting in a Habbo-style window, switch the bot on or off, and watch what it's doing in a live log. See [Settings window](#settings-window).
+
 > ⚠️ **Running this on an official hotel breaks Habbo's [Terms of Service](https://www.habbo.com/playing-habbo/terms-of-service) and can get the account banned.**
 > - **Section 5 (Code of Conduct)** forbids automation software, bots, scripts and unauthorized third-party tools (G-Earth and its extensions count) meant to gain an unfair advantage or interfere with the Service.
 > - **Section 8 (Termination)** lets Sulake suspend or permanently ban an account for a breach, or a suspected breach, and block access by IP address or machine ID.
@@ -131,20 +133,28 @@ Press **▶** next to Bobba Buddy in G-Earth's Extensions tab. A Habbo-style win
 - **BOT ON / OFF** in the yellow header pauses everything: chat commands, copying, autopilot and anti-idle. The header also shows who you're connected as and today's spend.
 - **Pages** for the whitelist, commands, avatar, room, Claude, budget and advanced settings. Every option in `config.toml` is there as a switch, a −/+ number or a text box.
 - **Save** checks the settings and writes `config.toml`, keeping your comments, and the bot applies them straight away. A bad value turns its setting red and nothing is written. **Revert** puts back what's saved.
+- **Extension Logs** shows the bot's log live, like a terminal, for debugging: coloured levels, level and text filters, Auto-scroll (on by default; scroll up to pause, back to the bottom to follow again), a Debug switch for step-by-step detail, and Copy, Clear and Open log file. See [Extension Logs](docs/09-settings-window.md#extension-logs).
 - **About** has the version and the GitHub and docs links.
+- Save and Revert appear only on the pages with settings.
 
 <table>
   <tr>
     <td align="center"><img src="docs/images/settings-avatar.png" alt="Avatar page: autopilot switches, waits and walk radius" width="260"><br><sub>Avatar</sub></td>
-    <td align="center"><img src="docs/images/settings-claude.png" alt="Claude page: model, thinking effort choice and limits" width="260"><br><sub>Claude</sub></td>
+    <td align="center"><img src="docs/images/settings-extension-logs.png" alt="Extension Logs page: live log in a dark terminal with filters and an Auto-scroll switch" width="260"><br><sub>Extension Logs</sub></td>
     <td align="center"><img src="docs/images/settings-about.png" alt="About page: logo, version, GitHub and docs buttons" width="260"><br><sub>About</sub></td>
   </tr>
 </table>
 
-Every page is shown in the [Settings window guide](docs/09-settings-window.md). Pressing ▶ again brings the open window to the front. Editing `config.toml` by hand still works, and an open window picks up outside edits. To try the window without G-Earth:
+Every page is shown in the [Settings window guide](docs/09-settings-window.md). Pressing ▶ again brings the open window to the front. Editing `config.toml` by hand still works, and an open window picks up outside edits. The window shows as "Bobba Buddy" with its logo in the macOS menu bar and Dock and on the Windows taskbar.
+
+To try the window without G-Earth (the second command fills Extension Logs with sample lines):
 
 ```bash
 uv run python -m bobba_buddy.settings
+```
+
+```bash
+uv run python -m bobba_buddy.settings --page "Extension Logs" --demo-logs
 ```
 
 **Linux:** the window needs Tkinter (`sudo apt install python3-tk` on Debian and Ubuntu). Without it the bot runs normally and says so in the G-Earth console. The python.org installers and uv's own Python builds already include it.
@@ -259,11 +269,12 @@ Habbo client ⇄ G-Earth ⇄ (socket) ⇄ this extension
 uv run pytest        # offline test suite (fake G-Earth + fake Claude)
 uv run ruff check .  # lint, including Google-style docstrings
 uv run --group docs sphinx-build -b html docs/sphinx docs/sphinx/_build/html   # HTML docs
+uv run --no-project --with pymupdf python scripts/make_icons.py   # only when the settings window's icons change
 ```
 
-Logs go to `logs/bobba-buddy.log` (rotating, about 6 MB kept).
+Logs go to `logs/bobba-buddy.log` in the project folder (rotating, about 6 MB kept). The settings window's Extension Logs page shows the same lines live.
 
-**Versioning.** Current version: **1.3.3**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.4.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 
@@ -280,4 +291,5 @@ Logs go to `logs/bobba-buddy.log` (rotating, about 6 MB kept).
 | Console: "Claude API error, bot paused" | Fix the API key or model in `.env`/`config.toml`, then press ▶ in G-Earth and switch the bot back ON. |
 | A file appears in `logs/bad-packets/` | Habbo changed a packet layout. The bot keeps working around it; share the file to get the parser updated. |
 | G-Earth runs but no window opens (even after restarting) | A hidden `.DS_Store` file in G-Earth's `Extensions` folder. Finder creates it when you open the folder, and G-Earth crashes trying to start it as an extension. Run `uv run python scripts/install_gearth.py` again: it removes the file and, on macOS, leaves an empty `.DS_Store` folder in its place so Finder can't recreate it. Or delete it by hand: `rm "$HOME/Library/Application Support/G-Earth/Extensions/.DS_Store"`. See [Bugs and fixes](docs/07-bugs-and-fixes.md#22-g-earth-runs-but-its-window-never-opens). |
-| Nothing happens at all | Check that the name is in `whitelist`, that the bot is ON (the switch in the settings window, ▶ in G-Earth), and look in `logs/bobba-buddy.log`. |
+| Nothing happens at all | Check that the name is in `whitelist` and that the bot is ON (the switch in the settings window, ▶ in G-Earth). Then open **Extension Logs** in the settings window and turn on **Debug** to see each step a command goes through. |
+| I want to see what the bot is doing | Settings window → **Extension Logs**: the live log, with filters. The same lines are in `logs/bobba-buddy.log` in the project folder. |
