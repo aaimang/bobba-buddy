@@ -234,7 +234,7 @@ uv run --group docs sphinx-build -b html docs/sphinx docs/sphinx/_build/html   #
 
 Logs go to `logs/bobba-buddy.log` (rotating, about 6 MB kept).
 
-**Versioning.** Current version: **1.2.2**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.2.3**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 
@@ -250,4 +250,5 @@ Logs go to `logs/bobba-buddy.log` (rotating, about 6 MB kept).
 | Console: "Unknown packet names…" | G-Earth's packet info for this client version is missing. Update G-Earth. |
 | Console: "Claude API error, bot paused" | Fix the API key or model in `.env`/`config.toml`, then double-click the extension. |
 | A file appears in `logs/bad-packets/` | Habbo changed a packet layout. The bot keeps working around it; share the file to get the parser updated. |
+| G-Earth runs but no window opens (even after restarting) | A hidden `.DS_Store` file in G-Earth's `Extensions` folder. Finder creates it when you open the folder, and G-Earth crashes trying to start it as an extension. The installer now removes it; run `uv run python scripts/install_gearth.py` again, or delete it by hand: `rm "$HOME/Library/Application Support/G-Earth/Extensions/.DS_Store"`. See [Bugs and fixes](docs/07-bugs-and-fixes.md#22-g-earth-runs-but-its-window-never-opens). |
 | Nothing happens at all | Check that the name is in `whitelist`, that the bot is ON (double-click toggles it), and look in `logs/bobba-buddy.log`. |

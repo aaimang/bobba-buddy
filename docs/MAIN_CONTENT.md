@@ -47,6 +47,7 @@ Each version below has a git tag (`v1.2.2` and so on), except 1.1.1 and 1.1.2: t
 
 | Version | Contents |
 |---|---|
+| `v1.2.3` | Fix: `install_gearth.py` removes a stray macOS `.DS_Store` from G-Earth's `Extensions` folder (and from its own extension folder). G-Earth 1.5.4 tried to start it as an extension and crashed before its window opened. `--dry-run` only reports it. |
 | `v1.2.2` | New tagline: "Bobba Buddy: a hotel sidekick for G-Earth" (README and docs home page). |
 | `v1.2.1` | `install_gearth.py` finds G-Earth by itself on Windows and Linux: from the running G-Earth, else by a quick search of Downloads, Desktop, Documents and home. `--gearth-dir` is now only a fallback. |
 | `v1.2.0` | Runs on **macOS, Windows and Linux**. `install_gearth.py` takes `--gearth-dir` (G-Earth's folder or `G-Earth.jar`) on Windows and Linux and uses the right virtualenv Python per OS. State and dump files are always UTF-8. A test workflow runs lint and the tests on all three systems. README has Windows (PowerShell) setup. |

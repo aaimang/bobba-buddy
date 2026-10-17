@@ -259,3 +259,70 @@ class TestMain:
         )
         assert self.run(monkeypatch, "--dry-run") == 0
         assert "found the running G-Earth" in capsys.readouterr().out
+
+
+class TestDsStore:
+    """Finder's .DS_Store in Extensions/ stops G-Earth's window from opening."""
+
+    def test_removed(self, tmp_path, capsys):
+        (tmp_path / ".DS_Store").write_bytes(b"\0\0\0\1Bud1")
+        assert install_gearth.remove_ds_store(tmp_path)
+        assert not (tmp_path / ".DS_Store").exists()
+        assert "never opens its window" in capsys.readouterr().out
+
+    def test_dry_run_only_reports(self, tmp_path, capsys):
+        (tmp_path / ".DS_Store").write_bytes(b"x")
+        assert install_gearth.remove_ds_store(tmp_path, dry_run=True)
+        assert (tmp_path / ".DS_Store").exists()
+        assert "would remove" in capsys.readouterr().out
+
+    def test_missing_is_fine(self, tmp_path, capsys):
+        assert not install_gearth.remove_ds_store(tmp_path)
+        assert not install_gearth.remove_ds_store(tmp_path / "no-such-folder")
+        assert capsys.readouterr().out == ""
+
+    def test_other_files_untouched(self, tmp_path):
+        (tmp_path / ".DS_Store").write_bytes(b"x")
+        (tmp_path / "notes.txt").write_text("keep")
+        (tmp_path / "Other_1.0").mkdir()
+        (tmp_path / "Other_1.0" / ".DS_Store").write_bytes(b"x")
+        install_gearth.remove_ds_store(tmp_path)
+        assert (tmp_path / "notes.txt").read_text() == "keep"
+        assert (tmp_path / "Other_1.0" / ".DS_Store").exists()  # not ours, not touched
+
+    def run(self, monkeypatch, *args):
+        monkeypatch.setattr(sys, "argv", ["install_gearth.py", *args])
+        return install_gearth.main()
+
+    def make_extensions(self, tmp_path):
+        extensions = tmp_path / "Extensions"
+        (extensions / "Other_1.0").mkdir(parents=True)
+        (extensions / "Other_1.0" / ".DS_Store").write_bytes(b"x")
+        (extensions / ".DS_Store").write_bytes(b"x")
+        return extensions
+
+    def test_install_cleans_extensions_and_own_folder(self, monkeypatch, tmp_path):
+        extensions = self.make_extensions(tmp_path)
+        ours = extensions / f"Bobba Buddy_{install_gearth.__version__}"
+        ours.mkdir()
+        (ours / ".DS_Store").write_bytes(b"x")
+        python = tmp_path / "python"
+        python.write_text("")
+        monkeypatch.setattr(install_gearth, "venv_python", lambda project: python)
+        assert self.run(monkeypatch, "--gearth-dir", str(tmp_path)) == 0
+        assert not (extensions / ".DS_Store").exists()
+        assert not (ours / ".DS_Store").exists()
+        assert (ours / "command.txt").exists()
+        assert (extensions / "Other_1.0" / ".DS_Store").exists()
+
+    def test_uninstall_cleans_extensions(self, monkeypatch, tmp_path):
+        extensions = self.make_extensions(tmp_path)
+        assert self.run(monkeypatch, "--gearth-dir", str(tmp_path), "--uninstall") == 0
+        assert not (extensions / ".DS_Store").exists()
+        assert (extensions / "Other_1.0").is_dir()
+
+    def test_dry_run_reports_without_removing(self, monkeypatch, capsys, tmp_path):
+        extensions = self.make_extensions(tmp_path)
+        assert self.run(monkeypatch, "--gearth-dir", str(tmp_path), "--dry-run") == 0
+        assert (extensions / ".DS_Store").exists()
+        assert "would remove" in capsys.readouterr().out

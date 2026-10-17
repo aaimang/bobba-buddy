@@ -121,3 +121,10 @@ Lesson: compare a real captured packet against the layout before blaming the too
 ### 21. wikiHow couldn't be fetched
 - **Cause:** Claude Code can't fetch from wikihow.com.
 - **Workaround:** the page was pasted into the chat. Its roast techniques (comparisons, exaggeration, backhanded compliments, rhymes) shaped the `/roast` prompt; no lines were copied.
+
+## Installing
+
+### 22. G-Earth runs but its window never opens
+- **Symptom:** after opening G-Earth's `Extensions` folder in Finder, G-Earth stopped showing its window. The process kept running, and restarting didn't help. `~/Library/Logs/G-Earth/app.log` ended with `Running extension …/Extensions/.DS_Store`.
+- **Cause:** Finder writes a hidden `.DS_Store` into every folder you open. G-Earth 1.5.4 tries to start **every** entry in `Extensions/` as an extension. `.DS_Store` has no launch command, so JavaFX's start-up crashes with a `NullPointerException` (`ExecutionInfo.getExecutionCommand(String)` returns `null`) before the window is shown.
+- **Fix:** delete the file (`rm "$HOME/Library/Application Support/G-Earth/Extensions/.DS_Store"`). Since 1.2.3, `scripts/install_gearth.py` removes a stray `.DS_Store` from `Extensions/` and from its own extension folder on every run, including `--uninstall` (`--dry-run` only reports it). Other extensions' folders aren't touched.

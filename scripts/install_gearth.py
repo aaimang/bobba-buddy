@@ -32,6 +32,8 @@ Attributes:
     SKIP_DIRS (frozenset[str]): Folder names never scanned (large, never G-Earth).
     SKIP_SUFFIXES (tuple[str, ...]): Folder name endings never scanned (app bundles,
         photo and music libraries).
+    DS_STORE (str): Finder's hidden folder-settings file, which G-Earth mistakes for an
+        extension (macOS only).
 """
 
 from __future__ import annotations
@@ -54,6 +56,7 @@ from bobba_buddy import __version__  # noqa: E402
 
 MAC_GEARTH_DIR = Path("~/Library/Application Support/G-Earth").expanduser()
 FOLDER_PREFIX = "Bobba Buddy_"
+DS_STORE = ".DS_Store"
 PROGRAM_NAMES = frozenset({"g-earth.jar", "g-earth.exe", "g-earth"})
 SEARCH_DEPTH = 3
 HOME_DEPTH = 1
@@ -391,6 +394,38 @@ def locate_gearth_dir(
     return None, "couldn't find G-Earth (start it once, or keep it running while installing)"
 
 
+def remove_ds_store(folder: Path, dry_run: bool = False) -> bool:
+    """Remove a stray ``.DS_Store`` directly inside ``folder``.
+
+    Finder leaves this hidden file in any folder you open on macOS. G-Earth 1.5.4 tries
+    to start every entry in ``Extensions/`` as an extension; for ``.DS_Store`` it crashes
+    with a ``NullPointerException`` before its window opens, so G-Earth keeps running
+    with no window. Only this one file is touched; elsewhere than macOS it's a no-op.
+
+    Args:
+        folder: The folder to clean.
+        dry_run: Only report what would be removed.
+
+    Returns:
+        ``True`` if there was one (removed, or would be in a dry run).
+    """
+    path = folder / DS_STORE
+    if not path.is_file():
+        return False
+    print(
+        f"{'would remove' if dry_run else 'removing'} {path}: G-Earth tries to start it "
+        "as an extension and then never opens its window"
+    )
+    if not dry_run:
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            pass  # already gone
+        except OSError as exc:
+            print(f"warning: couldn't remove {path}: {exc}", file=sys.stderr)
+    return True
+
+
 def main() -> int:
     """Install, update or uninstall the G-Earth extension entry.
 
@@ -429,6 +464,7 @@ def main() -> int:
         )
         return 1
 
+    remove_ds_store(extensions, args.dry_run)
     old = sorted(p for p in extensions.iterdir() if p.is_dir() and p.name.startswith(FOLDER_PREFIX))
     target = extensions / f"{FOLDER_PREFIX}{__version__}"
 
@@ -463,6 +499,7 @@ def main() -> int:
     content = json.dumps(command, separators=(",", ":"))
     print(f"{'would write' if args.dry_run else 'writing'} {target / 'command.txt'}:\n  {content}")
     if args.dry_run:
+        remove_ds_store(target, dry_run=True)
         return 0
 
     for folder in old:
@@ -470,6 +507,7 @@ def main() -> int:
             shutil.rmtree(folder)
     (target / "extension").mkdir(parents=True, exist_ok=True)
     (target / "command.txt").write_text(content, encoding="utf-8")
+    remove_ds_store(target)
     print("Done. Restart G-Earth; 'Bobba Buddy' appears in the Extensions tab.")
     return 0
 
