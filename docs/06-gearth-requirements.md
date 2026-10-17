@@ -12,7 +12,14 @@
 - **Client type:** Habbo AIR is what G-Earth calls **`FLASH`**. The bot checks `client_type` on connect and warns if it isn't `FLASH`.
 - **macOS:** G-Earth re-signs the AIR client found at `~/Library/Application Support/Habbo Launcher/downloads/air/<version>/Habbo.app`.
 
-G-Earth keeps its data in `~/Library/Application Support/G-Earth/`:
+G-Earth's data folder depends on the OS. G-Earth uses the system property `gearth.data.dir` if it's set, and otherwise the folder that holds `G-Earth.jar` (`ExecutionInfo` in G-Realm's source):
+
+| OS | Data folder | Why |
+|---|---|---|
+| macOS | `~/Library/Application Support/G-Earth/` | The macOS app's launcher sets `-Dgearth.data.dir` to this |
+| Windows, Linux | The folder with `G-Earth.jar`, wherever G-Earth was unzipped | Nothing sets `gearth.data.dir` |
+
+That's why `scripts/install_gearth.py` needs `--gearth-dir` on Windows and Linux. The folder contains:
 
 | Path | Contents |
 |---|---|

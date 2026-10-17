@@ -39,14 +39,24 @@ Replies come back the way the question was asked: chat gets chat, shout gets sho
 
 ## Setup
 
-Requirements: macOS, [G-Earth](https://github.com/G-Realm/G-Earth) with the Habbo AIR client, Python 3.11+ and [uv](https://docs.astral.sh/uv/).
+Requirements: **macOS, Windows or Linux**, [G-Earth](https://github.com/G-Realm/G-Earth) with the Habbo AIR client, Python 3.11+ and [uv](https://docs.astral.sh/uv/). Run the commands from the project folder (where you cloned it).
+
+**macOS / Linux** (Terminal):
 
 ```bash
-cd ~/Desktop/bobba-buddy
 uv sync
 cp .env.example .env                 # then paste your ANTHROPIC_API_KEY into .env
 cp config.example.toml config.toml   # then put your friends' names in `whitelist`
 uv run python scripts/smoke_claude.py   # optional: one live call per command (~$0.02)
+```
+
+**Windows** (PowerShell):
+
+```powershell
+uv sync
+Copy-Item .env.example .env                 # then paste your ANTHROPIC_API_KEY into .env
+Copy-Item config.example.toml config.toml   # then put your friends' names in `whitelist`
+uv run python scripts/smoke_claude.py       # optional: one live call per command (~$0.02)
 ```
 
 The example config has `rejoin_on_start` and `return_on_exit` off. Turn them on in `config.toml` if you want them.
@@ -64,13 +74,25 @@ uv run python -m bobba_buddy -p 9092
 - If G-Earth restarts, the bot reconnects on its own. Ctrl-C stops it.
 - Double-clicking the extension in G-Earth turns everything on and off.
 
-**From G-Earth's Extensions list.**
+The same command works in PowerShell on Windows.
+
+**From G-Earth's Extensions list.** On **macOS**, G-Earth keeps its data in `~/Library/Application Support/G-Earth`, so no folder is needed:
 
 ```bash
 uv run python scripts/install_gearth.py
 ```
 
-Restart G-Earth and "Bobba Buddy" appears in the Extensions tab. Remove it with `--uninstall`.
+On **Windows and Linux**, G-Earth keeps `Extensions/` next to `G-Earth.jar`, wherever you unzipped it. Pass that folder (or the jar itself):
+
+```powershell
+uv run python scripts/install_gearth.py --gearth-dir "C:/Tools/G-Earth"
+```
+
+```bash
+uv run python scripts/install_gearth.py --gearth-dir ~/G-Earth
+```
+
+Restart G-Earth and "Bobba Buddy" appears in the Extensions tab. Add `--dry-run` to preview, or `--uninstall` to remove it (with the same `--gearth-dir`). If the bot's folder moves, run the installer again.
 
 ### Restarting and reloading the room
 
@@ -209,7 +231,7 @@ uv run --group docs sphinx-build -b html docs/sphinx docs/sphinx/_build/html   #
 
 Logs go to `logs/bobba-buddy.log` (rotating, about 6 MB kept).
 
-**Versioning.** Current version: **1.1.2**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.2.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 

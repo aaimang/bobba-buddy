@@ -76,7 +76,7 @@ class Budget:
     def _load(self) -> None:
         """Read the state file; a missing or corrupt file means nothing spent."""
         try:
-            data = json.loads(self._path.read_text())
+            data = json.loads(self._path.read_text(encoding="utf-8"))
         except FileNotFoundError:
             return
         except (OSError, ValueError) as exc:
@@ -96,7 +96,7 @@ class Budget:
         try:
             self._path.parent.mkdir(parents=True, exist_ok=True)
             tmp = self._path.with_suffix(".tmp")
-            tmp.write_text(json.dumps(payload))
+            tmp.write_text(json.dumps(payload), encoding="utf-8")
             os.replace(tmp, self._path)
         except OSError as exc:
             log.error("could not save budget state: %s", exc)

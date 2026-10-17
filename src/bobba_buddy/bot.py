@@ -473,7 +473,7 @@ class BobbaBuddy:
             return
         try:
             self._last_room_path.parent.mkdir(parents=True, exist_ok=True)
-            self._last_room_path.write_text(json.dumps({"room_id": room_id}))
+            self._last_room_path.write_text(json.dumps({"room_id": room_id}), encoding="utf-8")
         except OSError as exc:
             log.warning("could not save last room: %s", exc)
 
@@ -486,7 +486,7 @@ class BobbaBuddy:
         if self._last_room_path is None:
             return None
         try:
-            return int(json.loads(self._last_room_path.read_text())["room_id"])
+            return int(json.loads(self._last_room_path.read_text(encoding="utf-8"))["room_id"])
         except (OSError, ValueError, KeyError, TypeError):
             return None
 

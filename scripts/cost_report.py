@@ -113,7 +113,7 @@ def main() -> int:
     # Today's total as the bot's budget check sees it.
     print("Today (state/budget.json — what the daily cap uses)")
     try:
-        state = json.loads((PROJECT / "state" / "budget.json").read_text())
+        state = json.loads((PROJECT / "state" / "budget.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         state = {}
     if state.get("date") == today:

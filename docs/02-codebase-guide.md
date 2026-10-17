@@ -32,7 +32,7 @@ bobba-buddy/
 │  └─ gpython.py             single import point for g_python (silences its warnings)
 ├─ scripts/
 │  ├─ smoke_claude.py        one live Claude call per command (~$0.02)
-│  ├─ install_gearth.py      registers the bot in G-Earth's Extensions list
+│  ├─ install_gearth.py      registers the bot in G-Earth's Extensions list (macOS, Windows, Linux)
 │  └─ cost_report.py         spend by day, command and person
 ├─ tests/                    offline pytest suite (fake G-Earth, fake Claude)
 ├─ logs/                     bobba-buddy.log (rotating), bad-packets/ (git-ignored)
@@ -131,7 +131,7 @@ Every module, class and function has a **Google-style** docstring (`Args:`, `Ret
 
 ## Tests
 
-`uv run pytest` runs about 200 offline tests in under a few seconds.
+`uv run pytest` runs about 210 offline tests in under a few seconds. On GitHub, `.github/workflows/tests.yml` runs ruff and the tests on macOS, Windows and Linux on every push.
 
 | File | Covers |
 |---|---|
@@ -140,6 +140,7 @@ Every module, class and function has a **Google-style** docstring (`Args:`, `Ret
 | `test_avatar.py` | Copying, autopilot, anti-idle, live `UserUpdate` capture, strict vs default mode |
 | `test_protocol.py` | Packet round trips, live `Users` captures, tolerant parsing |
 | `test_textfmt.py`, `test_commands_prompts.py`, `test_config.py`, `test_state.py`, `test_llm.py`, `test_guard.py` | The individual modules |
+| `test_install_gearth.py` | The installer's G-Earth folder and virtualenv paths on macOS, Windows and Linux |
 
 Real packets captured from the live client are used as fixtures (`LIVE_USER_UPDATE`, `LIVE_BOT_ENTRY`, `LIVE_PLAYER_PACKET`). When the client changes again, add the new capture as a test first.
 

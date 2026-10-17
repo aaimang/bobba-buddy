@@ -59,7 +59,7 @@ def _save_packet(name: str, raw: bytes, problem: str) -> Path | None:
         path = _dump_dir / f"{name}-{time.strftime('%Y%m%d-%H%M%S')}.hex"
         lines = [f"# {name}: {problem}", f"# {len(raw)} bytes"]
         lines += [raw[i : i + 32].hex(" ") for i in range(0, len(raw), 32)]
-        path.write_text("\n".join(lines) + "\n")
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         return path
     except OSError as exc:
         log.debug("could not save bad packet: %s", exc)

@@ -31,9 +31,10 @@ The installed copy was read directly from `site-packages/g_python/`.
 | `G-Earth/src/main/java/gearth/app/services/extension_handler/extensions/implementations/network/NetworkExtensionCodec.java` | Extension message types; Latin-1 transport keeps bytes intact |
 | `G-Earth-Api/src/main/java/gearth/protocol/HMessage.java`, `HPacket.java` | How packets are turned into text for extensions |
 | `G-Earth-Api/src/main/java/gearth/extensions/parsers/HEntityUpdate.java` | G-Earth's own `UserUpdate` parser (documented layout) |
+| `G-Earth/src/main/java/gearth/app/services/extension_handler/extensions/implementations/network/executer/ExecutionInfo.java`, `G-Earth/pom.xml` | Where `Extensions/` lives: `gearth.data.dir` (set only by the macOS launcher) or the folder with `G-Earth.jar` |
 | `G-Earth/src/main/java/gearth/app/services/packet_info/PacketInfoManagerRemote.java`, `providers/implementations/SulekPacketInfoProvider.java` | For Flash only Sulek is used; it strips name suffixes and fetches by hotel version |
 
-Also from your own G-Earth folder: `~/Library/Application Support/G-Earth/Extensions/*/command.txt` (the extension launch format).
+Also from your own G-Earth folder (`~/Library/Application Support/G-Earth/` on macOS; the `G-Earth.jar` folder on Windows and Linux): `Extensions/*/command.txt`, the extension launch format.
 
 ## G-Rust (Rust extension framework)
 
