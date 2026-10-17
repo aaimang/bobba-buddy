@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import sys
 import tkinter as tk
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from . import theme as t
@@ -419,6 +419,7 @@ class ForumButton(tk.Frame):
         command: Callable[[], Any],
         *,
         color: str = "grey",
+        icon: tk.PhotoImage | None = None,
     ) -> None:
         """Create the button.
 
@@ -428,12 +429,15 @@ class ForumButton(tk.Frame):
             text: Button text.
             command: Called on click (press and release inside the button).
             color: ``yellow``, ``grey`` or ``blue``.
+            icon: Optional image left of the text.
         """
         super().__init__(parent, bg=t.BLACK)
         self._base, self._hover, self._down, fg = self.COLORS[color]
         self._label = tk.Label(
             self,
-            text=text,
+            text=f" {text}" if icon else text,  # Tk has no gap option for compound
+            image=icon or "",
+            compound="left",
             font=th.font(13, bold=True),
             bg=self._base,
             fg=fg,
@@ -465,7 +469,14 @@ class ForumButton(tk.Frame):
 class Box(tk.Frame):
     """A section box: black outline, yellow header, white rows."""
 
-    def __init__(self, parent: tk.Misc, th: Theme, title: str, note: str = "") -> None:
+    def __init__(
+        self,
+        parent: tk.Misc,
+        th: Theme,
+        title: str,
+        note: str = "",
+        icon: tk.PhotoImage | None = None,
+    ) -> None:
         """Create the box.
 
         Args:
@@ -473,21 +484,24 @@ class Box(tk.Frame):
             th: Theme.
             title: Header text.
             note: Optional grey line under the header.
+            icon: Optional image left of the title.
         """
         super().__init__(parent, bg=t.BLACK)
         self._th = th
         inner = tk.Frame(self, bg=t.WHITE)
         inner.pack(fill="both", expand=True, padx=th.px(2), pady=(th.px(2), th.px(3)))
+        header = tk.Frame(inner, bg=t.YELLOW, padx=th.px(10), pady=th.px(5))
+        header.pack(fill="x")
+        if icon is not None:
+            tk.Label(header, image=icon, bg=t.YELLOW).pack(side="left", padx=(0, th.px(6)))
         tk.Label(
-            inner,
+            header,
             text=title,
             font=th.font(13, bold=True),
             bg=t.YELLOW,
             fg=t.INK,
             anchor="w",
-            padx=th.px(10),
-            pady=th.px(5),
-        ).pack(fill="x")
+        ).pack(side="left", fill="x", expand=True)
         tk.Frame(inner, bg=t.BLACK, height=th.px(2)).pack(fill="x")
         self.body = tk.Frame(inner, bg=t.WHITE)
         self.body.pack(fill="both", expand=True)
@@ -538,7 +552,12 @@ class Sidebar(tk.Frame):
     """The page list on the left; the selected page gets a white row and a yellow bar."""
 
     def __init__(
-        self, parent: tk.Misc, th: Theme, names: Sequence[str], on_select: Callable[[str], None]
+        self,
+        parent: tk.Misc,
+        th: Theme,
+        names: Sequence[str],
+        on_select: Callable[[str], None],
+        icons: Mapping[str, tk.PhotoImage | None] | None = None,
     ) -> None:
         """Create the sidebar.
 
@@ -547,14 +566,21 @@ class Sidebar(tk.Frame):
             th: Theme.
             names: Page names, top to bottom.
             on_select: Called with a page name when it's clicked.
+            icons: Optional image per page name, shown left of the name.
         """
-        super().__init__(parent, bg=t.SIDEBAR, width=th.px(150))
-        self._items: dict[str, tuple[tk.Frame, tk.Frame, tk.Label]] = {}
+        super().__init__(parent, bg=t.SIDEBAR, width=th.px(160))
+        self._items: dict[str, tuple[tk.Misc, ...]] = {}
         for name in names:
             item = tk.Frame(self, bg=t.SIDEBAR)
             item.pack(fill="x")
             bar = tk.Frame(item, bg=t.SIDEBAR, width=th.px(4))
             bar.pack(side="left", fill="y")
+            parts: list[tk.Misc] = [item]
+            icon = (icons or {}).get(name)
+            if icon is not None:
+                image = tk.Label(item, image=icon, bg=t.SIDEBAR)
+                image.pack(side="left", padx=(th.px(8), 0))
+                parts.append(image)
             label = tk.Label(
                 item,
                 text=name,
@@ -562,13 +588,14 @@ class Sidebar(tk.Frame):
                 bg=t.SIDEBAR,
                 fg="#2a3a42",
                 anchor="w",
-                padx=th.px(10),
+                padx=th.px(8 if icon is not None else 10),
                 pady=th.px(7),
             )
             label.pack(side="left", fill="x", expand=True)
+            parts.append(label)
             tk.Frame(self, bg="#b9b7af", height=1).pack(fill="x")
-            _clickable((item, label), lambda n=name: on_select(n))
-            self._items[name] = (item, bar, label)
+            _clickable(parts, lambda n=name: on_select(n))
+            self._items[name] = (bar, *parts)
 
     def select(self, name: str) -> None:
         """Highlight a page.
@@ -576,11 +603,10 @@ class Sidebar(tk.Frame):
         Args:
             name: The page to highlight.
         """
-        for page, (item, bar, label) in self._items.items():
+        for page, (bar, *parts) in self._items.items():
             on = page == name
-            bg = t.WHITE if on else t.SIDEBAR
-            item.configure(bg=bg)
-            label.configure(bg=bg)
+            for part in parts:
+                part.configure(bg=t.WHITE if on else t.SIDEBAR)
             bar.configure(bg=t.YELLOW if on else t.SIDEBAR)
 
 

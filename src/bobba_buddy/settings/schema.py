@@ -6,6 +6,9 @@ listed in :data:`HIDDEN`; a test checks that, so a new config key can't be forgo
 Attributes:
     PAGES (tuple[Page, ...]): The sidebar pages, in order (About is added by the window).
     HIDDEN (frozenset[tuple[str, str]]): Config keys deliberately left out of the window.
+    PAGE_ICONS (dict[str, str]): Tabler icon name per sidebar page, About included.
+    BOX_ICONS (dict[str, str]): Tabler icon name per box title. The PNGs are made by
+        ``scripts/make_icons.py``.
 """
 
 from __future__ import annotations
@@ -472,6 +475,41 @@ HIDDEN: frozenset[tuple[str, str]] = frozenset(
     ]
     + [("commands.roast", "web_search"), ("commands.joke", "web_search")]
 )
+
+PAGE_ICONS: dict[str, str] = {
+    "Whitelist": "users",
+    "Commands": "message-circle",
+    "Avatar": "walk",
+    "Room": "door",
+    "Claude": "sparkles",
+    "Budget": "coin",
+    "Advanced": "adjustments",
+    "About": "info-circle",
+}
+
+BOX_ICONS: dict[str, str] = {
+    "Who can use the bot": "users",
+    "/q · ask Claude": "message-question",
+    "/roast": "flame",
+    "/suggest": "bulb",
+    "/joke": "mood-happy",
+    "Autopilot": "route",
+    "How often each action": "dice",
+    "Copy nearby players": "copy",
+    "Anti-idle": "zzz",
+    "Timing": "clock",
+    "Rejoin after a restart": "refresh",
+    "Go back after leaving": "arrow-back-up",
+    "Model": "sparkles",
+    "/q memory": "brain",
+    "Spending": "coin",
+    "Load": "gauge",
+    "Chat": "messages",
+    "Packet safety": "shield-check",
+    "Pricing (USD)": "receipt",
+    "Room loading": "home",
+    "About Bobba Buddy": "info-circle",
+}
 
 
 def all_fields() -> list[Field]:

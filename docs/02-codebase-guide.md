@@ -31,6 +31,7 @@ bobba-buddy/
 │  ├─ guard.py               exception guard + bad-packet reporting
 │  ├─ gpython.py             single import point for g_python (silences its warnings)
 │  ├─ assets/logo.png        the logo, for the settings window (same file as the docs logo)
+│  ├─ assets/icons/          Tabler icon PNGs for the settings window (MIT, LICENSE inside)
 │  └─ settings/              the settings window that G-Earth's ▶ button opens
 │     ├─ host.py             SettingsHost: runs the window on the main thread; BotBridge
 │     ├─ window.py           SettingsWindow (Tkinter), run_window()
@@ -42,7 +43,8 @@ bobba-buddy/
 ├─ scripts/
 │  ├─ smoke_claude.py        one live Claude call per command (~$0.02)
 │  ├─ install_gearth.py      registers the bot in G-Earth's Extensions list (macOS, Windows, Linux)
-│  └─ cost_report.py         spend by day, command and person
+│  ├─ cost_report.py         spend by day, command and person
+│  └─ make_icons.py          renders the settings window's Tabler icons to PNG (needs PyMuPDF)
 ├─ tests/                    offline pytest suite (fake G-Earth, fake Claude)
 ├─ logs/                     bobba-buddy.log (rotating), bad-packets/ (git-ignored)
 └─ state/                    budget.json, last_room.json (git-ignored)

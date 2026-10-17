@@ -6,7 +6,7 @@ from pathlib import Path
 
 from bobba_buddy.config import EFFORT_LEVELS
 from bobba_buddy.settings.configfile import config_fields
-from bobba_buddy.settings.schema import HIDDEN, PAGES, all_fields
+from bobba_buddy.settings.schema import BOX_ICONS, HIDDEN, PAGE_ICONS, PAGES, all_fields
 
 ROOT = Path(__file__).resolve().parents[1]
 KINDS = {"toggle": bool, "number": (int, float), "text": str, "names": list, "chips": list}
@@ -61,3 +61,31 @@ def test_packaged_logo_matches_the_docs_logo():
     packaged = ROOT / "src" / "bobba_buddy" / "assets" / "logo.png"
     docs = ROOT / "docs" / "sphinx" / "_static" / "logo.png"
     assert packaged.read_bytes() == docs.read_bytes()
+
+
+def _make_icons():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("make_icons", ROOT / "scripts" / "make_icons.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_every_page_and_box_has_an_icon():
+    titles = {box.title for page in PAGES for box in page.boxes} | {"About Bobba Buddy"}
+    assert set(PAGE_ICONS) == {p.name for p in PAGES} | {"About"}
+    assert titles <= set(BOX_ICONS)
+
+
+def test_icon_pngs_exist_in_both_sizes():
+    make_icons = _make_icons()
+    icon_dir = ROOT / "src" / "bobba_buddy" / "assets" / "icons"
+    wanted = [(n, "nav") for n in PAGE_ICONS.values()] + [(n, "box") for n in BOX_ICONS.values()]
+    wanted += [("brand-github", "link"), ("brand-github", "white")]
+    for name, variant in wanted:
+        assert name in make_icons.ICONS[variant], (name, variant)
+        size = make_icons.VARIANTS[variant][1]
+        for px in (size, size * 2):
+            assert (icon_dir / f"{name}-{variant}-{px}.png").is_file(), (name, variant, px)
+    assert (icon_dir / "LICENSE").is_file()  # Tabler is MIT: keep its licence with the PNGs

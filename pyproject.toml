@@ -1,6 +1,6 @@
 [project]
 name = "bobba-buddy"
-version = "1.3.1"
+version = "1.3.2"
 description = "G-Earth extension: Habbo chat commands answered by Claude, plus avatar autopilot, copying and anti-idle"
 readme = "README.md"
 requires-python = ">=3.11"

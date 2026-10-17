@@ -12,7 +12,6 @@ Attributes:
 
 from __future__ import annotations
 
-import base64
 import logging
 import queue
 import re
@@ -26,8 +25,8 @@ from .. import __version__
 from . import theme as t
 from .configfile import FieldId, config_fields, load_values, save_values
 from .host import Bridge, Done
-from .schema import PAGES, Field, all_fields
-from .theme import Theme, activate_app, enable_dpi_awareness, hide_from_dock
+from .schema import BOX_ICONS, PAGE_ICONS, PAGES, Field, all_fields
+from .theme import Theme, activate_app, enable_dpi_awareness, hide_from_dock, load_png
 from .widgets import (
     Box,
     Chips,
@@ -51,10 +50,7 @@ _ERROR_KEY = re.compile(r"\[([\w.]+)\] (\w+)")
 def load_logo(root: tk.Misc) -> tk.PhotoImage | None:
     """The logo as a Tk image, or ``None`` if Tk can't create it.
 
-    The PNG is read here and handed to Tk as data, so Tcl never opens the file. On
-    Windows, creating an image occasionally fails with an empty ``TclError`` (seen in
-    CI after several windows in one process); one retry, then the window goes on
-    without the logo rather than not opening.
+    See :func:`~bobba_buddy.settings.theme.load_png`.
 
     Args:
         root: The Tk root.
@@ -62,17 +58,7 @@ def load_logo(root: tk.Misc) -> tk.PhotoImage | None:
     Returns:
         The image, or ``None``.
     """
-    try:
-        data = base64.b64encode(LOGO_PATH.read_bytes())
-    except OSError:
-        log.warning("logo not found at %s", LOGO_PATH)
-        return None
-    for attempt in (1, 2):
-        try:
-            return tk.PhotoImage(master=root, data=data)
-        except tk.TclError as exc:
-            log.warning("couldn't load the logo (attempt %d): %r", attempt, exc)
-    return None
+    return load_png(root, LOGO_PATH)
 
 
 def _same(a: Any, b: Any) -> bool:
@@ -211,7 +197,8 @@ class SettingsWindow:
         body = tk.Frame(self.root, bg=t.PANEL)
         body.pack(fill="both", expand=True)
         names = [p.name for p in PAGES] + [ABOUT]
-        self._sidebar = Sidebar(body, th, names, self.show_page)
+        icons = {name: th.icon(PAGE_ICONS.get(name, ""), "nav") for name in names}
+        self._sidebar = Sidebar(body, th, names, self.show_page, icons)
         self._sidebar.pack(side="left", fill="y")
         self._sidebar.pack_propagate(False)
         tk.Frame(body, bg=t.BLACK, width=th.px(2)).pack(side="left", fill="y")
@@ -250,9 +237,12 @@ class SettingsWindow:
             bg=t.SIDEBAR,
             fg="#3a3a36",
         ).pack(side="left")
+        github = th.icon("brand-github", "link")
         link = tk.Label(
             footer,
-            text="GitHub: aaimang/bobba-buddy ↗",
+            text=" GitHub: aaimang/bobba-buddy ↗" if github else "GitHub: aaimang/bobba-buddy ↗",
+            image=github or "",
+            compound="left",
             font=th.font(11, bold=True),
             bg=t.SIDEBAR,
             fg=t.BLUE_DARK,
@@ -266,7 +256,7 @@ class SettingsWindow:
         th = self.th
         frame = tk.Frame(self._scroll.inner, bg=t.PANEL)
         for spec in boxes:
-            box = Box(frame, th, spec.title, spec.note)
+            box = Box(frame, th, spec.title, spec.note, th.icon(BOX_ICONS.get(spec.title, "")))
             box.pack(fill="x", pady=(0, th.px(10)), padx=(0, th.px(10)))
             for field in spec.fields:
                 holder, label, row = box.row(field.label, field.help)
@@ -311,7 +301,8 @@ class SettingsWindow:
         """The About page: big logo, version, links and the disclaimer."""
         th = self.th
         frame = tk.Frame(self._scroll.inner, bg=t.PANEL)
-        box = Box(frame, th, "About Bobba Buddy")
+        title = "About Bobba Buddy"
+        box = Box(frame, th, title, icon=th.icon(BOX_ICONS[title]))
         box.pack(fill="x", padx=(0, th.px(10)))
         inner = tk.Frame(box.body, bg=t.WHITE, padx=th.px(14), pady=th.px(14))
         inner.pack(fill="x")
@@ -338,7 +329,12 @@ class SettingsWindow:
         buttons = tk.Frame(text, bg=t.WHITE)
         buttons.pack(fill="x", pady=th.px(12))
         ForumButton(
-            buttons, th, "View on GitHub", lambda: webbrowser.open(t.GITHUB_URL), color="blue"
+            buttons,
+            th,
+            "View on GitHub",
+            lambda: webbrowser.open(t.GITHUB_URL),
+            color="blue",
+            icon=th.icon("brand-github", "white"),
         ).pack(side="left")
         ForumButton(buttons, th, "Read the docs", lambda: webbrowser.open(t.DOCS_URL)).pack(
             side="left", padx=th.px(8)

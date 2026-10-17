@@ -176,3 +176,10 @@ def test_window_opens_without_a_logo(root, config, monkeypatch):
     w = SettingsWindow(root, FakeBridge(), config, EXAMPLE)
     assert w._logo is None
     w.show_page(ABOUT)
+
+
+def test_theme_icons(win):
+    assert win.th.icon("users", "nav") is not None
+    assert win.th.icon("users", "nav") is win.th.icon("users", "nav")  # cached
+    assert win.th.icon("no-such-icon") is None
+    assert win.th.icon("") is None
