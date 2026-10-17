@@ -1,0 +1,36 @@
+/* Bright Habbo yellow is unreadable as text on white, so light mode uses the
+   darker step of the same yellow scale for links and signature names. Dark mode
+   keeps the theme's own bright yellow. */
+.light {
+  --sy-c-link: var(--accent-11);
+  --sy-c-link-hover: var(--accent-12);
+  --sig-name: var(--accent-11);
+}
+
+/* The logo is pixel art: scale it without smoothing, a little larger than default. */
+.sy-head-brand img {
+  height: 32px;
+  width: auto;
+  image-rendering: pixelated;
+}
+
+/* Footer: disclaimer and credits centred in one narrow column. */
+.sy-foot-reserved {
+  justify-content: center;
+  text-align: center;
+}
+.sy-foot-copyright {
+  max-width: 36rem;
+  margin: 0 auto;
+}
+.sy-foot-copyright p + p {
+  margin-top: 0.25rem;
+}
+
+/* Shibuya hides the project name when a logo is set; show both. */
+.sy-head-brand {
+  gap: 0.5rem;
+}
+.sy-head-brand strong {
+  display: inline !important;
+}

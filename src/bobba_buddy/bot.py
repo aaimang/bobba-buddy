@@ -77,7 +77,7 @@ EXTENSION_INFO = {
     "title": "Bobba Buddy",
     "description": "Chat commands answered by Claude, plus avatar autopilot, copying and anti-idle",
     "version": __version__,
-    "author": "aimanamri",
+    "author": "Mang",
 }
 EXTENSION_SETTINGS = {"use_click_trigger": True, "can_leave": True, "can_delete": True}
 

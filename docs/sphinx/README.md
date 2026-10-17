@@ -28,7 +28,9 @@ The strict build currently passes with no warnings.
 
 | Path | Contents |
 |---|---|
-| `conf.py` | Settings: extensions, Google-style napoleon, autodoc defaults, MyST heading anchors, furo theme |
+| `conf.py` | Settings: extensions, Google-style napoleon, autodoc defaults, MyST heading anchors, Shibuya theme (yellow accent) |
+| `_static/` | `logo.png` (logo and favicon) and `custom.css` (light-mode link contrast, crisp pixel-art logo) |
+| `_templates/` | `components/foot-copyright.html`: the footer with the fan-project disclaimer (text in `conf.py` `html_context`) |
 | `index.rst` | Landing page and the table of contents |
 | `guides/*.md` | Include stubs for `docs/*.md` (same file names, so links between guides keep working) |
 | `api/*.rst` | One `automodule` page per module, plus `scripts.*.rst` for `scripts/` |

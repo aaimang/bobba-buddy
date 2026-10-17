@@ -21,8 +21,9 @@ from bobba_buddy import __version__  # noqa: E402
 # -- Project -------------------------------------------------------------------------
 
 project = "Bobba Buddy"
-author = "aimanamri"
-copyright = "2026, aimanamri"  # noqa: A001 - Sphinx's name for it
+author = "Bobba Buddy"
+copyright = ""  # noqa: A001 - Sphinx's name for it
+html_show_copyright = False  # no author line in the footer
 version = release = __version__
 
 # -- Extensions ----------------------------------------------------------------------
@@ -73,5 +74,22 @@ myst_heading_anchors = 4
 
 # -- HTML ----------------------------------------------------------------------------
 
-html_theme = "furo"
+html_theme = "shibuya"
+html_theme_options = {
+    "accent_color": "yellow",  # Habbo yellow
+    "light_logo": "_static/logo.png",
+    "dark_logo": "_static/logo.png",
+}
+html_favicon = "_static/logo.png"
+html_static_path = ["_static"]
+html_css_files = ["custom.css"]  # darker yellow text in light mode, crisp pixel-art logo
+templates_path = ["_templates"]  # footer with the fan-project disclaimer
+
+# Shown in the footer of every page (Habbo Fansite Policy asks for a disclaimer on each page).
+html_context = {
+    "disclaimer": (
+        "Unofficial fan project, not affiliated with or endorsed by Sulake Oy. "
+        "Habbo and the avatar artwork in the logo belong to Sulake Oy."
+    ),
+}
 html_title = f"Bobba Buddy {release}"

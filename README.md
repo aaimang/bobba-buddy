@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/sphinx/_static/logo.png" alt="Bobba Buddy logo" width="108" style="image-rendering: pixelated;">
+</p>
+
 # Bobba Buddy: a Habbo chat bot for G-Earth
 
 A G-Earth extension in Python for the Habbo AIR client. It answers whitelisted chat commands with Claude, and gives your avatar a life of its own.
@@ -28,6 +32,8 @@ Replies come back the way the question was asked: chat gets chat, shout gets sho
 > - **Rooms that run mainly on automated activity** may be left out of the Navigator's room lists.
 >
 > The whitelist, cooldowns and pacing lower the risk but don't remove it. The autopilot and anti-idle features in particular make an account look automated.
+
+> **Unofficial fan project,** not affiliated with or endorsed by Sulake Oy. Habbo and the avatar artwork in the logo (made with the HabboQuests imager) belong to Sulake Oy.
 
 ## Setup
 
@@ -201,7 +207,7 @@ uv run --group docs sphinx-build -b html docs/sphinx docs/sphinx/_build/html   #
 
 Logs go to `logs/bobba-buddy.log` (rotating, about 6 MB kept).
 
-**Versioning.** Current version: **1.1.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.1.1**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 

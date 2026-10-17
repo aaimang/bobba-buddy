@@ -45,5 +45,6 @@ The project uses [semantic versioning](https://semver.org): `MAJOR.MINOR.PATCH`,
 
 | Tag | Contents |
 |---|---|
+| `v1.1.1` | Sphinx docs switched from Furo to the [Shibuya](https://shibuya.lepture.com) theme with a Habbo-yellow accent. Logo (a Habbo avatar made with the HabboQuests imager) in the README and docs, and an unofficial-fan-project disclaimer in the README and on every docs page. |
 | `v1.1.0` | Renamed to **Bobba Buddy**: package `bobba_buddy` (run with `python -m bobba_buddy`), class `BobbaBuddy`, G-Earth title "Bobba Buddy", log file `logs/bobba-buddy.log`, project folder `bobba-buddy`. `config.toml` is unchanged. |
 | `v1.0.0` | First release. Chat commands `/q`, `/roast`, `/suggest`, `/joke`, with whitelist, cooldowns, a daily budget and per-user `/q` memory. Avatar copying, autopilot and anti-idle. Room rejoin and return. Live-client packet fixes, the cost report, the G-Earth installer, these docs and the Sphinx API reference. |
