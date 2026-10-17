@@ -9,8 +9,7 @@ from pathlib import Path
 import pytest
 
 from bobba_buddy.settings import logbuffer
-from bobba_buddy.settings.logbuffer import LogBuffer, LogLine
-from bobba_buddy.settings.logview import format_line, level_label
+from bobba_buddy.settings.logbuffer import LogBuffer, LogLine, format_line, level_label
 
 
 @pytest.fixture

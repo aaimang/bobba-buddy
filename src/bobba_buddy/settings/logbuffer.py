@@ -13,6 +13,7 @@ from __future__ import annotations
 import itertools
 import logging
 import threading
+import time
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
@@ -43,6 +44,45 @@ class LogLine:
     thread: str
     source: str
     message: str
+
+
+def level_label(level: int) -> str:
+    """The chip a level belongs to.
+
+    Args:
+        level: A ``logging`` level number.
+
+    Returns:
+        ``DEBUG``, ``INFO``, ``WARN`` or ``ERROR``.
+    """
+    if level >= logging.ERROR:
+        return "ERROR"
+    if level >= logging.WARNING:
+        return "WARN"
+    if level >= logging.INFO:
+        return "INFO"
+    return "DEBUG"
+
+
+def format_line(line: LogLine) -> list[tuple[str, str]]:
+    """Split a log line into coloured parts.
+
+    Args:
+        line: The log line.
+
+    Returns:
+        ``(text, tag)`` pairs; the whole line ends with a newline.
+    """
+    stamp = time.strftime("%H:%M:%S", time.localtime(line.created))
+    millis = int(line.created % 1 * 1000)
+    label = level_label(line.level)
+    return [
+        (f"{stamp}.{millis:03d} ", "time"),
+        (f"{label:<5} ", label),
+        (f"{line.thread[:14]:<14} ", "thread"),
+        (f"{line.source[:8]:<8} ", "source"),
+        (line.message + "\n", ""),
+    ]
 
 
 class LogBuffer(logging.Handler):
