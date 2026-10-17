@@ -426,6 +426,38 @@ def remove_ds_store(folder: Path, dry_run: bool = False) -> bool:
     return True
 
 
+def guard_ds_store(extensions: Path, dry_run: bool = False, platform: str = sys.platform) -> None:
+    """Keep Finder's ``.DS_Store`` file out of G-Earth's ``Extensions`` folder for good.
+
+    Removes a stray ``.DS_Store`` file, then (on macOS) puts an empty *folder* of that
+    name in its place. Finder can't write its file over a folder, so the file can't
+    come back each time the folder is viewed. G-Earth is fine with the folder: it
+    starts folders through their ``command.txt``, and when there's none it logs the
+    error and carries on; its store's "Installed" tab skips folder names without
+    ``_``. Elsewhere only the removal runs (a no-op without the file).
+
+    Args:
+        extensions: G-Earth's ``Extensions`` folder.
+        dry_run: Only report.
+        platform: ``sys.platform`` value; injectable for tests.
+    """
+    remove_ds_store(extensions, dry_run)
+    guard = extensions / DS_STORE
+    if platform != "darwin" or guard.is_dir():
+        return
+    if guard.exists() and not dry_run:
+        return  # the file couldn't be removed (already warned)
+    print(
+        f"{'would create' if dry_run else 'creating'} empty folder {guard}: stops Finder "
+        "writing the .DS_Store file that keeps G-Earth's window from opening"
+    )
+    if not dry_run:
+        try:
+            guard.mkdir()
+        except OSError as exc:
+            print(f"warning: couldn't create {guard}: {exc}", file=sys.stderr)
+
+
 def main() -> int:
     """Install, update or uninstall the G-Earth extension entry.
 
@@ -464,7 +496,7 @@ def main() -> int:
         )
         return 1
 
-    remove_ds_store(extensions, args.dry_run)
+    guard_ds_store(extensions, args.dry_run)
     old = sorted(p for p in extensions.iterdir() if p.is_dir() and p.name.startswith(FOLDER_PREFIX))
     target = extensions / f"{FOLDER_PREFIX}{__version__}"
 

@@ -48,6 +48,7 @@ Each version below has a git tag (`v1.2.2` and so on), except 1.1.1 and 1.1.2: t
 
 | Version | Contents |
 |---|---|
+| `v1.3.3` | Fix: G-Earth's window stopped opening again because Finder recreated `.DS_Store` in the `Extensions` folder. On macOS `install_gearth.py` now leaves an empty `.DS_Store` folder there, which Finder can't overwrite and G-Earth skips. |
 | `v1.3.2` | Settings window icons, as in the design mockup: one per sidebar page and box header, plus GitHub marks on the About button and footer link ([Tabler](https://tabler.io/icons) icons, MIT, as PNGs in `assets/icons/`, made by `scripts/make_icons.py`). Logo and icon loading share one tolerant loader. New screenshots in the README and the settings guide. |
 | `v1.3.1` | Fix: the settings window could fail to open on Windows when Tk couldn't create the logo image (an empty `TclError`, seen in CI). The logo is now loaded from memory with one retry, and the window opens without it if it still fails. The docs build installs Tkinter on Ubuntu. |
 | `v1.3.0` | **Settings window:** G-Earth's ▶ button opens a Habbo-style Tkinter window (macOS, Windows, Linux) to edit every `config.toml` option, with the bot's ON/OFF switch, live status, and an About page with the logo, version and GitHub link. Saves keep your comments (new dependency `tomlkit`) and apply at once. ▶ no longer toggles the bot; the switch is in the window. `config.toml` is unchanged. |

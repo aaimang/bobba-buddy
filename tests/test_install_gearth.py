@@ -310,7 +310,7 @@ class TestDsStore:
         python.write_text("")
         monkeypatch.setattr(install_gearth, "venv_python", lambda project: python)
         assert self.run(monkeypatch, "--gearth-dir", str(tmp_path)) == 0
-        assert not (extensions / ".DS_Store").exists()
+        assert not (extensions / ".DS_Store").is_file()  # a guard folder on macOS
         assert not (ours / ".DS_Store").exists()
         assert (ours / "command.txt").exists()
         assert (extensions / "Other_1.0" / ".DS_Store").exists()
@@ -318,7 +318,7 @@ class TestDsStore:
     def test_uninstall_cleans_extensions(self, monkeypatch, tmp_path):
         extensions = self.make_extensions(tmp_path)
         assert self.run(monkeypatch, "--gearth-dir", str(tmp_path), "--uninstall") == 0
-        assert not (extensions / ".DS_Store").exists()
+        assert not (extensions / ".DS_Store").is_file()
         assert (extensions / "Other_1.0").is_dir()
 
     def test_dry_run_reports_without_removing(self, monkeypatch, capsys, tmp_path):
@@ -326,3 +326,31 @@ class TestDsStore:
         assert self.run(monkeypatch, "--gearth-dir", str(tmp_path), "--dry-run") == 0
         assert (extensions / ".DS_Store").exists()
         assert "would remove" in capsys.readouterr().out
+
+    def test_guard_folder_on_macos(self, tmp_path, capsys):
+        (tmp_path / ".DS_Store").write_bytes(b"x")
+        install_gearth.guard_ds_store(tmp_path, platform="darwin")
+        assert (tmp_path / ".DS_Store").is_dir()
+        assert list((tmp_path / ".DS_Store").iterdir()) == []  # no command.txt: G-Earth skips it
+        out = capsys.readouterr().out
+        assert "removing" in out and "creating empty folder" in out
+
+    def test_guard_is_kept_and_quiet_next_time(self, tmp_path, capsys):
+        install_gearth.guard_ds_store(tmp_path, platform="darwin")
+        capsys.readouterr()
+        install_gearth.guard_ds_store(tmp_path, platform="darwin")
+        assert (tmp_path / ".DS_Store").is_dir()
+        assert capsys.readouterr().out == ""
+
+    @pytest.mark.parametrize("platform", ["win32", "linux"])
+    def test_no_guard_elsewhere(self, tmp_path, platform):
+        (tmp_path / ".DS_Store").write_bytes(b"x")
+        install_gearth.guard_ds_store(tmp_path, platform=platform)
+        assert not (tmp_path / ".DS_Store").exists()
+
+    def test_guard_dry_run(self, tmp_path, capsys):
+        (tmp_path / ".DS_Store").write_bytes(b"x")
+        install_gearth.guard_ds_store(tmp_path, dry_run=True, platform="darwin")
+        assert (tmp_path / ".DS_Store").is_file()
+        out = capsys.readouterr().out
+        assert "would remove" in out and "would create" in out
