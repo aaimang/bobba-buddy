@@ -1,4 +1,4 @@
-"""Tests for scripts/install_gearth.py: G-Earth folder and venv paths on each OS."""
+"""Tests for scripts/install_gearth.py: finding G-Earth and the venv on each OS."""
 
 from __future__ import annotations
 
@@ -14,6 +14,15 @@ install_gearth = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(install_gearth)
 
 
+def make_gearth(folder: Path, program: str = "G-Earth.jar", extensions_up: bool = False) -> Path:
+    """Create a fake unzipped G-Earth and return its program file."""
+    folder.mkdir(parents=True, exist_ok=True)
+    program_path = folder / program
+    program_path.write_text("")
+    (folder.parent if extensions_up else folder).joinpath("Extensions").mkdir(exist_ok=True)
+    return program_path
+
+
 class TestGearthDir:
     def test_macos_uses_application_support(self):
         assert install_gearth.default_gearth_dir("darwin") == install_gearth.MAC_GEARTH_DIR
@@ -24,14 +33,14 @@ class TestGearthDir:
         )
 
     @pytest.mark.parametrize("platform", ["win32", "linux"])
-    def test_windows_and_linux_need_the_folder(self, platform):
+    def test_windows_and_linux_have_no_fixed_folder(self, platform):
         assert install_gearth.default_gearth_dir(platform) is None
 
     def test_folder_is_used_as_is(self, tmp_path):
         assert install_gearth.resolve_gearth_dir(tmp_path) == tmp_path
 
-    @pytest.mark.parametrize("name", ["G-Earth.jar", "G-Earth-1.5.4.JAR"])
-    def test_jar_path_means_its_folder(self, tmp_path, name):
+    @pytest.mark.parametrize("name", ["G-Earth.jar", "G-Earth-1.5.4.JAR", "G-Earth.exe"])
+    def test_program_path_means_its_folder(self, tmp_path, name):
         assert install_gearth.resolve_gearth_dir(tmp_path / name) == tmp_path
 
 
@@ -43,9 +52,179 @@ class TestVenvPython:
 
     @pytest.mark.parametrize("platform", ["darwin", "linux"])
     def test_posix_layout(self, tmp_path, platform):
-        assert (
-            install_gearth.venv_python(tmp_path, platform) == tmp_path / ".venv" / "bin" / "python"
+        expected = tmp_path / ".venv" / "bin" / "python"
+        assert install_gearth.venv_python(tmp_path, platform) == expected
+
+
+class TestProgramNames:
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "G-Earth.jar",
+            "/opt/G-Earth/G-Earth",
+            r"C:\Tools\G-Earth\G-Earth.exe",
+            "g-earth-1.5.4.jar",
+        ],
+    )
+    def test_recognised(self, path):
+        assert install_gearth.is_gearth_program(path)
+
+    @pytest.mark.parametrize("path", ["java", "G-Earth-Api.txt", "/usr/bin/javaw", "Earth.jar"])
+    def test_not_recognised(self, path):
+        assert not install_gearth.is_gearth_program(path)
+
+
+class TestWindowsProcesses:
+    def test_launcher_exe_from_executable_path(self):
+        exe = r"C:\Users\me\Downloads\G-Earth\G-Earth.exe"
+        line = f'"{exe}" "{exe}"'  # executable path, then the command line
+        assert install_gearth.programs_in_command_line(line) == [exe, exe]
+
+    def test_jar_in_java_command_line(self):
+        line = r'"C:\Java\bin\javaw.exe" javaw -jar "C:\My Tools\G-Earth\G-Earth.jar"'
+        assert install_gearth.programs_in_command_line(line) == [r"C:\My Tools\G-Earth\G-Earth.jar"]
+
+    def test_unrelated_java_is_ignored(self):
+        assert install_gearth.programs_in_command_line(r'"C:\Java\java.exe" -jar other.jar') == []
+
+    def test_running_programs_are_deduplicated(self, monkeypatch):
+        line = r'"C:\G\G-Earth.exe" "C:\G\G-Earth.exe"'
+        monkeypatch.setattr(install_gearth, "_windows_process_command_lines", lambda: [line])
+        assert install_gearth.running_gearth_programs("win32") == [Path(r"C:\G\G-Earth.exe")]
+
+
+posix_only = pytest.mark.skipif(
+    sys.platform == "win32", reason="Linux paths and symlinks don't apply on Windows"
+)
+
+
+class TestLinuxProcesses:
+    def test_relative_jar_uses_process_folder(self, tmp_path):
+        found = install_gearth.programs_in_arguments(["java", "-jar", "G-Earth.jar"], tmp_path)
+        assert found == [tmp_path / "G-Earth.jar"]
+
+    @posix_only
+    def test_classpath_entries(self, tmp_path):
+        args = ["java", "-cp", "lib/a.jar:/opt/G-Earth/G-Earth.jar", "gearth.Main"]
+        assert install_gearth.programs_in_arguments(args, tmp_path) == [
+            Path("/opt/G-Earth/G-Earth.jar")
+        ]
+
+    @posix_only
+    def test_reads_proc(self, tmp_path):
+        proc = tmp_path / "proc"
+        gearth = tmp_path / "G-Earth"
+        gearth.mkdir()
+        pid = proc / "123"
+        pid.mkdir(parents=True)
+        (pid / "cmdline").write_bytes(b"java\0-jar\0G-Earth.jar\0")
+        (pid / "cwd").symlink_to(gearth)
+        (proc / "self").mkdir()  # not a pid: skipped
+        (proc / "456").mkdir()  # no cmdline: skipped
+        processes = install_gearth._linux_process_arguments(proc)
+        assert processes == [(gearth.resolve(), ["java", "-jar", "G-Earth.jar"])]
+
+    def test_macos_has_no_process_lookup(self):
+        assert install_gearth.running_gearth_programs("darwin") == []
+
+
+class TestFolderSearch:
+    def test_extensions_next_to_program(self, tmp_path):
+        program = make_gearth(tmp_path / "G-Earth")
+        assert install_gearth.gearth_dir_for(program) == tmp_path / "G-Earth"
+
+    def test_extensions_one_level_up(self, tmp_path):
+        program = make_gearth(tmp_path / "G-Earth" / "app", extensions_up=True)
+        assert install_gearth.gearth_dir_for(program) == tmp_path / "G-Earth"
+
+    def test_no_extensions_folder(self, tmp_path):
+        (tmp_path / "G-Earth.jar").write_text("")
+        assert install_gearth.gearth_dir_for(tmp_path / "G-Earth.jar") is None
+
+    def test_finds_unzipped_gearth_in_downloads(self, tmp_path):
+        program = make_gearth(
+            tmp_path / "Downloads" / "G-Earth-windows-x64" / "G-Earth", "G-Earth.exe"
         )
+        found = install_gearth.search_gearth_programs(install_gearth.search_roots(tmp_path))
+        assert found == [program.resolve()]
+
+    def test_skips_hidden_and_tool_folders_and_respects_depth(self, tmp_path):
+        make_gearth(tmp_path / ".cache" / "G-Earth")
+        make_gearth(tmp_path / "proj" / ".venv" / "G-Earth")
+        make_gearth(tmp_path / "a" / "b" / "c" / "d" / "G-Earth")
+        assert install_gearth.search_gearth_programs([(tmp_path, 3)]) == []
+
+    def test_home_is_searched_shallow(self, tmp_path):
+        near = make_gearth(tmp_path / "G-Earth")
+        make_gearth(tmp_path / "Projects" / "old" / "G-Earth")  # too deep under home
+        found = install_gearth.search_gearth_programs(install_gearth.search_roots(tmp_path))
+        assert found == [near.resolve()]
+
+    def test_roots_are_not_walked_twice(self, tmp_path):
+        make_gearth(tmp_path / "Downloads" / "G-Earth")
+        seen = []
+        real_scandir = install_gearth.os.scandir
+
+        def counting_scandir(path):
+            seen.append(Path(path).resolve())
+            return real_scandir(path)
+
+        install_gearth.os.scandir, saved = counting_scandir, real_scandir
+        try:
+            install_gearth.search_gearth_programs(install_gearth.search_roots(tmp_path))
+        finally:
+            install_gearth.os.scandir = saved
+        assert seen.count((tmp_path / "Downloads").resolve()) == 1
+
+    def test_time_limit_stops_the_search(self, tmp_path):
+        make_gearth(tmp_path / "Downloads" / "G-Earth")
+        roots = install_gearth.search_roots(tmp_path)
+        assert install_gearth.search_gearth_programs(roots, time_limit=-1) == []
+
+    @pytest.mark.parametrize("name", ["Photos Library.photoslibrary", "G-Earth.app", "Pictures"])
+    def test_skips_libraries_and_bundles(self, tmp_path, name):
+        make_gearth(tmp_path / name)
+        assert install_gearth.search_gearth_programs([(tmp_path, 3)]) == []
+
+    def test_same_folder_found_twice_counts_once(self, tmp_path):
+        program = make_gearth(tmp_path / "G-Earth")
+        assert install_gearth.find_gearth_dirs([program, program]) == [
+            (tmp_path / "G-Earth").resolve()
+        ]
+
+
+class TestLocate:
+    def test_gearth_dir_wins(self, tmp_path):
+        assert install_gearth.locate_gearth_dir(tmp_path, "win32")[0] == tmp_path
+
+    def test_macos_default(self, tmp_path):
+        found, how = install_gearth.locate_gearth_dir(None, "darwin", tmp_path)
+        assert found == install_gearth.MAC_GEARTH_DIR and "macOS" in how
+
+    def test_running_gearth_first(self, monkeypatch, tmp_path):
+        running = make_gearth(tmp_path / "Running")
+        make_gearth(tmp_path / "Downloads" / "G-Earth")
+        monkeypatch.setattr(install_gearth, "running_gearth_programs", lambda p: [running])
+        found, how = install_gearth.locate_gearth_dir(None, "win32", tmp_path)
+        assert found == (tmp_path / "Running").resolve() and "running" in how
+
+    def test_search_when_not_running(self, monkeypatch, tmp_path):
+        make_gearth(tmp_path / "Desktop" / "G-Earth", "G-Earth")
+        monkeypatch.setattr(install_gearth, "running_gearth_programs", lambda p: [])
+        found, how = install_gearth.locate_gearth_dir(None, "linux", tmp_path)
+        assert found == (tmp_path / "Desktop" / "G-Earth").resolve() and "searching" in how
+
+    def test_several_found_asks(self, monkeypatch, tmp_path):
+        make_gearth(tmp_path / "Desktop" / "G-Earth")
+        make_gearth(tmp_path / "Downloads" / "G-Earth")
+        monkeypatch.setattr(install_gearth, "running_gearth_programs", lambda p: [])
+        found, how = install_gearth.locate_gearth_dir(None, "win32", tmp_path)
+        assert found is None and "several" in how
+
+    def test_nothing_found(self, monkeypatch, tmp_path):
+        monkeypatch.setattr(install_gearth, "running_gearth_programs", lambda p: [])
+        found, how = install_gearth.locate_gearth_dir(None, "linux", tmp_path)
+        assert found is None and "couldn't find" in how
 
 
 class TestMain:
@@ -53,8 +232,8 @@ class TestMain:
         monkeypatch.setattr(sys, "argv", ["install_gearth.py", *args])
         return install_gearth.main()
 
-    def test_no_folder_on_windows_explains_gearth_dir(self, monkeypatch, capsys):
-        monkeypatch.setattr(install_gearth, "default_gearth_dir", lambda: None)
+    def test_not_found_explains_gearth_dir(self, monkeypatch, capsys):
+        monkeypatch.setattr(install_gearth, "locate_gearth_dir", lambda given: (None, "nope"))
         assert self.run(monkeypatch) == 1
         assert "--gearth-dir" in capsys.readouterr().err
 
@@ -68,5 +247,15 @@ class TestMain:
             self.run(monkeypatch, "--gearth-dir", str(tmp_path / "G-Earth.jar"), "--dry-run") == 0
         )
         out = capsys.readouterr().out
-        assert "would write" in out and "Bobba Buddy_" in out
+        assert "would write" in out and "Bobba Buddy_" in out and "using --gearth-dir" in out
         assert not any((tmp_path / "Extensions").iterdir())
+
+    def test_detected_folder_is_used(self, monkeypatch, capsys, tmp_path):
+        (tmp_path / "Extensions").mkdir()
+        monkeypatch.setattr(
+            install_gearth,
+            "locate_gearth_dir",
+            lambda given: (tmp_path, "found the running G-Earth"),
+        )
+        assert self.run(monkeypatch, "--dry-run") == 0
+        assert "found the running G-Earth" in capsys.readouterr().out

@@ -19,7 +19,7 @@ G-Earth's data folder depends on the OS. G-Earth uses the system property `geart
 | macOS | `~/Library/Application Support/G-Earth/` | The macOS app's launcher sets `-Dgearth.data.dir` to this |
 | Windows, Linux | The folder with `G-Earth.jar`, wherever G-Earth was unzipped | Nothing sets `gearth.data.dir` |
 
-That's why `scripts/install_gearth.py` needs `--gearth-dir` on Windows and Linux. The folder contains:
+On Windows and Linux, `scripts/install_gearth.py` finds the folder itself: first from the command line of a running G-Earth (PowerShell `Win32_Process` on Windows, `/proc/<pid>/cmdline` and `cwd` on Linux), then by searching Downloads, Desktop and Documents (3 levels deep) and the home folder (1 level), within 10 seconds. A match counts only if `Extensions/` is next to the program or one folder up. `--gearth-dir` overrides both. The folder contains:
 
 | Path | Contents |
 |---|---|

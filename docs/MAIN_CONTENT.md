@@ -45,6 +45,7 @@ The project uses [semantic versioning](https://semver.org): `MAJOR.MINOR.PATCH`,
 
 | Tag | Contents |
 |---|---|
+| `v1.2.1` | `install_gearth.py` finds G-Earth by itself on Windows and Linux: from the running G-Earth, else by a quick search of Downloads, Desktop, Documents and home. `--gearth-dir` is now only a fallback. |
 | `v1.2.0` | Runs on **macOS, Windows and Linux**. `install_gearth.py` takes `--gearth-dir` (G-Earth's folder or `G-Earth.jar`) on Windows and Linux and uses the right virtualenv Python per OS. State and dump files are always UTF-8. A test workflow runs lint and the tests on all three systems. README has Windows (PowerShell) setup. |
 | `v1.1.2` | Docs published to GitHub Pages (https://aaimang.github.io/bobba-buddy/) by a GitHub Actions workflow, `.github/workflows/docs.yml`, on every push to `main`. |
 | `v1.1.1` | Sphinx docs switched from Furo to the [Shibuya](https://shibuya.lepture.com) theme with a Habbo-yellow accent. Logo (a Habbo avatar made with the HabboQuests imager) in the README and docs, and an unofficial-fan-project disclaimer in the README and on every docs page. |

@@ -76,23 +76,26 @@ uv run python -m bobba_buddy -p 9092
 
 The same command works in PowerShell on Windows.
 
-**From G-Earth's Extensions list.** On **macOS**, G-Earth keeps its data in `~/Library/Application Support/G-Earth`, so no folder is needed:
+**From G-Earth's Extensions list.** The same command on every OS:
 
 ```bash
 uv run python scripts/install_gearth.py
 ```
 
-On **Windows and Linux**, G-Earth keeps `Extensions/` next to `G-Earth.jar`, wherever you unzipped it. Pass that folder (or the jar itself):
+It finds G-Earth's folder by itself and prints where and how:
+
+| OS | Where G-Earth keeps `Extensions/` | How the installer finds it |
+|---|---|---|
+| macOS | `~/Library/Application Support/G-Earth` | Fixed location |
+| Windows, Linux | Next to `G-Earth.exe` / `G-Earth.jar`, wherever you unzipped it | 1. The **running G-Earth** (keep it open while installing, the most reliable). 2. A quick **search** of Downloads, Desktop and Documents (3 folders deep) and your home folder. |
+
+If it finds none, or more than one, it asks you to choose with `--gearth-dir` (the folder or the program file):
 
 ```powershell
 uv run python scripts/install_gearth.py --gearth-dir "C:/Tools/G-Earth"
 ```
 
-```bash
-uv run python scripts/install_gearth.py --gearth-dir ~/G-Earth
-```
-
-Restart G-Earth and "Bobba Buddy" appears in the Extensions tab. Add `--dry-run` to preview, or `--uninstall` to remove it (with the same `--gearth-dir`). If the bot's folder moves, run the installer again.
+Restart G-Earth and "Bobba Buddy" appears in the Extensions tab. Add `--dry-run` to preview, or `--uninstall` to remove it. If the bot's folder moves, run the installer again.
 
 ### Restarting and reloading the room
 
@@ -231,7 +234,7 @@ uv run --group docs sphinx-build -b html docs/sphinx docs/sphinx/_build/html   #
 
 Logs go to `logs/bobba-buddy.log` (rotating, about 6 MB kept).
 
-**Versioning.** Current version: **1.2.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.2.1**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 
