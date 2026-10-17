@@ -16,6 +16,8 @@ uv run --group docs sphinx-build -b html docs/sphinx docs/sphinx/_build/html
 
 Open `docs/sphinx/_build/html/index.html` in a browser. `_build/` is git-ignored.
 
+**Published copy:** `.github/workflows/docs.yml` runs the strict build below on every push to `main` and deploys it to GitHub Pages at https://aaimang.github.io/bobba-buddy/. A docs warning fails the deploy, so the live site is never broken. (One-time setup: repo Settings → Pages → Source: GitHub Actions.)
+
 For a strict build (warnings fail it, and every cross-reference is checked):
 
 ```bash

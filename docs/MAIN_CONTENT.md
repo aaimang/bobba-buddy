@@ -21,7 +21,7 @@ Documentation for the Habbo AIR chat and avatar bot that runs as a G-Earth exten
 uv run --group docs sphinx-build -b html docs/sphinx docs/sphinx/_build/html
 ```
 
-Then open `docs/sphinx/_build/html/index.html`. Details are in `docs/sphinx/README.md`.
+Then open `docs/sphinx/_build/html/index.html`. The published copy is at https://aaimang.github.io/bobba-buddy/. Details are in `docs/sphinx/README.md`.
 
 ## Quick links
 
@@ -45,6 +45,7 @@ The project uses [semantic versioning](https://semver.org): `MAJOR.MINOR.PATCH`,
 
 | Tag | Contents |
 |---|---|
+| `v1.1.2` | Docs published to GitHub Pages (https://aaimang.github.io/bobba-buddy/) by a GitHub Actions workflow, `.github/workflows/docs.yml`, on every push to `main`. |
 | `v1.1.1` | Sphinx docs switched from Furo to the [Shibuya](https://shibuya.lepture.com) theme with a Habbo-yellow accent. Logo (a Habbo avatar made with the HabboQuests imager) in the README and docs, and an unofficial-fan-project disclaimer in the README and on every docs page. |
 | `v1.1.0` | Renamed to **Bobba Buddy**: package `bobba_buddy` (run with `python -m bobba_buddy`), class `BobbaBuddy`, G-Earth title "Bobba Buddy", log file `logs/bobba-buddy.log`, project folder `bobba-buddy`. `config.toml` is unchanged. |
 | `v1.0.0` | First release. Chat commands `/q`, `/roast`, `/suggest`, `/joke`, with whitelist, cooldowns, a daily budget and per-user `/q` memory. Avatar copying, autopilot and anti-idle. Room rejoin and return. Live-client packet fixes, the cost report, the G-Earth installer, these docs and the Sphinx API reference. |
