@@ -453,6 +453,26 @@ PAGES: tuple[Page, ...] = (
                 note="Used for the daily budget.",
             ),
             Box(
+                "In-hotel notifications",
+                (
+                    Field(
+                        "notify",
+                        "in_hotel",
+                        "Show bubbles in the hotel",
+                        "toggle",
+                        "Only you see them; nothing is sent to the room",
+                    ),
+                    Field("notify", "prefix", "Your command", "text", "For help and status"),
+                    Field("notify", "config_changes", "Config changes", "toggle"),
+                    Field("notify", "cooldowns", "Cooldowns", "toggle"),
+                    Field("notify", "errors", "Errors", "toggle"),
+                    Field("notify", "room", "Re-enter the room", "toggle"),
+                    _seconds(
+                        "notify", "min_gap_s", "Repeat gap", "Before the same bubble shows again"
+                    ),
+                ),
+            ),
+            Box(
                 "Update checks",
                 (
                     Field(
@@ -523,6 +543,7 @@ BOX_ICONS: dict[str, str] = {
     "Pricing (USD)": "receipt",
     "Room loading": "home",
     "Update checks": "refresh",
+    "In-hotel notifications": "bell",
     "Updates": "refresh",
     "Extension Logs": "terminal",
     "About Bobba Buddy": "info-circle",

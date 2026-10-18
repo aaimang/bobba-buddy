@@ -24,6 +24,7 @@ bobba-buddy/
 │  ├─ llm.py                 ClaudeResponder: API call, pause_turn, error mapping
 │  ├─ textfmt.py             sanitize + split into ≤100-char bubbles
 │  ├─ outbox.py              paced chat sender
+│  ├─ hotelui.py             HotelNotifier: bubbles and popups on your own client (/bb, notices)
 │  ├─ access.py              whitelist, cooldowns, in-flight tracking
 │  ├─ budget.py              daily spend cap and cost estimate
 │  ├─ memory.py              per-user /q history
@@ -148,14 +149,15 @@ Every module, class and function has a **Google-style** docstring (`Args:`, `Ret
 
 ## Tests
 
-`uv run pytest` runs about 250 offline tests in under a few seconds. On GitHub, `.github/workflows/tests.yml` runs ruff and the tests on macOS, Windows and Linux on every push.
+`uv run pytest` runs about 400 offline tests in under a few seconds. On GitHub, `.github/workflows/tests.yml` runs ruff and the tests on macOS, Windows and Linux on every push.
 
 | File | Covers |
 |---|---|
 | `conftest.py` | `FakeExtension`, `FakeResponder`, `InlineExecutor`, packet builders (`player`, `pet`, `bot_entity`, `user_update`, `floor_map`…) |
-| `test_bot.py` | End-to-end chat behaviour: modes, whitelist, cooldowns, budget, flood, roast, packet safety, rejoin/return |
+| `test_bot.py` | End-to-end chat behaviour: modes, whitelist, cooldowns, budget, flood, roast, packet safety, rejoin/return, `/bb` and notification bubbles |
 | `test_avatar.py` | Copying, autopilot, anti-idle, live `UserUpdate` capture, strict vs default mode |
 | `test_protocol.py` | Packet round trips, live `Users` captures, tolerant parsing |
+| `test_hotelui.py` | Bubble and popup packets, escaping, the repeat gap, the send queue and thread, the console fallback |
 | `test_textfmt.py`, `test_commands_prompts.py`, `test_config.py`, `test_state.py`, `test_llm.py`, `test_guard.py` | The individual modules |
 | `test_settings_*.py` | The settings window: saving with comments kept, every config key shown and every icon present, the main-thread host, the Extension Logs buffer and page, and the window itself (skipped without a display) |
 | `test_updates.py`, `test_updater.py` | Update checks with GitHub faked (versions, once-a-day timing, state, announcing once) and the one-click updater with git, uv and the installer faked (safety checks, step order, failures) |

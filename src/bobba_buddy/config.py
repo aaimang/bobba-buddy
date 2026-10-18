@@ -231,6 +231,29 @@ class UpdatesConfig:
 
 
 @dataclass(frozen=True)
+class NotifyConfig:
+    """``[notify]``: Habbo's own windows for you (only your client sees them).
+
+    Attributes:
+        in_hotel: Show notification bubbles in the hotel at all.
+        prefix: Your own command for ``help`` and ``status`` (never sent to the room).
+        config_changes: A bubble when ``config.toml`` is reloaded or has an error.
+        cooldowns: A bubble when a command is refused because of a cooldown.
+        errors: A bubble for errors (Claude API, budget, missing packets).
+        room: A bubble when the bot needs you to re-enter the room.
+        min_gap_s: Seconds before the same bubble may show again.
+    """
+
+    in_hotel: bool = True
+    prefix: str = "/bb"
+    config_changes: bool = True
+    cooldowns: bool = True
+    errors: bool = True
+    room: bool = True
+    min_gap_s: float = 10.0
+
+
+@dataclass(frozen=True)
 class CommandConfig:
     """``[commands.<name>]``: settings for one chat command.
 
@@ -278,6 +301,7 @@ class Config:
         room: ``[room]`` settings.
         avatar: ``[avatar]`` settings.
         updates: ``[updates]`` settings.
+        notify: ``[notify]`` settings.
         commands: ``[commands.<name>]`` settings, keyed by internal command name.
     """
 
@@ -290,6 +314,7 @@ class Config:
     room: RoomConfig = field(default_factory=RoomConfig)
     avatar: AvatarConfig = field(default_factory=AvatarConfig)
     updates: UpdatesConfig = field(default_factory=UpdatesConfig)
+    notify: NotifyConfig = field(default_factory=NotifyConfig)
     commands: Mapping[str, CommandConfig] = field(default_factory=lambda: dict(COMMAND_DEFAULTS))
 
 
@@ -356,6 +381,7 @@ def parse_config(data: dict[str, Any]) -> Config:
         "room",
         "avatar",
         "updates",
+        "notify",
         "commands",
     }
     unknown = set(data) - allowed
@@ -390,6 +416,7 @@ def parse_config(data: dict[str, Any]) -> Config:
         room=_build(RoomConfig, data.get("room", {}), "room"),
         avatar=_build(AvatarConfig, data.get("avatar", {}), "avatar"),
         updates=_build(UpdatesConfig, data.get("updates", {}), "updates"),
+        notify=_build(NotifyConfig, data.get("notify", {}), "notify"),
         commands=commands,
     )
     _validate(config)
@@ -466,6 +493,15 @@ def _validate(config: Config) -> None:
             raise ConfigError(f"[commands.{name}] max_chars >= 20 and max_bubbles 1-5")
         if cmd.cooldown_s < 0 or cmd.target_cooldown_s < 0:
             raise ConfigError(f"[commands.{name}] cooldowns must be >= 0")
+
+    notify = config.notify
+    own = notify.prefix.strip().lower()
+    if not own.startswith("/") or len(own) < 2 or " " in own:
+        raise ConfigError("[notify] prefix must be one word starting with '/', like '/bb'")
+    if own in prefixes and config.commands[prefixes[own]].enabled:
+        raise ConfigError(f"[notify] prefix '{own}' is already used by {prefixes[own]}")
+    if notify.min_gap_s < 0:
+        raise ConfigError("[notify] min_gap_s must be >= 0")
 
 
 def load_config(path: Path) -> Config:

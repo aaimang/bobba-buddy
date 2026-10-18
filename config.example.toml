@@ -86,6 +86,17 @@ require_seen_packets = false  # false: always act, G-Earth decides (see README: 
 [updates]
 check = true
 
+# Habbo's own windows, shown only on your screen (nothing is sent to the room).
+# Type "/bb help" or "/bb status" in chat; the room never sees it.
+[notify]
+in_hotel = true        # notification bubbles at the top right
+prefix = "/bb"
+config_changes = true  # config.toml reloaded, or has an error
+cooldowns = true       # a command was refused because of a cooldown
+errors = true          # Claude API errors, budget reached, missing packets
+room = true            # the bot needs you to re-enter the room
+min_gap_s = 10         # seconds before the same bubble shows again
+
 [commands.q]
 enabled = true
 prefix = "/q"

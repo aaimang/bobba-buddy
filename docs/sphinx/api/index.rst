@@ -21,6 +21,7 @@ Generated from the Google-style docstrings in ``src/bobba_buddy``.
    bobba_buddy.budget
    bobba_buddy.memory
    bobba_buddy.config
+   bobba_buddy.hotelui
    bobba_buddy.updates
    bobba_buddy.updater
    bobba_buddy.guard

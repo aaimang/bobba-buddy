@@ -642,3 +642,149 @@ class TestReturnOnExit:
         time.sleep(0.2)
         assert self.returns(ext2) == []
         bot2.stop()
+
+
+# --- hotel windows (/bb and notification bubbles) ----------------------------------
+
+
+def hotel_windows(h: Harness):
+    """Stop the notify thread, send what's queued, and decode what reached the client.
+
+    Args:
+        h: The harness.
+
+    Returns:
+        The decoded windows.
+    """
+    h.bot.hotel.stop()
+    h.bot.hotel.flush()
+    return h.ext.windows()
+
+
+def bubbles(h: Harness) -> list[str]:
+    return [p["message"] for name, (_, p) in hotel_windows(h) if name == "NotificationDialog"]
+
+
+def popups(h: Harness) -> list[dict[str, str]]:
+    return [p for name, (_, p) in hotel_windows(h) if p["display"] == "POP_UP"]
+
+
+@pytest.mark.parametrize("mode", [ChatMode.CHAT, ChatMode.SHOUT])
+def test_bb_help_is_blocked_and_opens_a_popup(harness, mode):
+    text = "/bb help"
+    if mode is ChatMode.CHAT:
+        msg = harness.ext.fire(TO_SERVER, "Chat", text, 0, 7)
+    else:
+        msg = harness.ext.fire(TO_SERVER, "Shout", text, 0)
+    assert msg.is_blocked
+    [popup] = popups(harness)
+    assert popup["title"].startswith("Bobba Buddy ")
+    assert "<b>/q</b> &lt;question&gt;" in popup["message"]
+    assert "<b>/q reset</b>" in popup["message"] and "<b>/bb status</b>" in popup["message"]
+    assert popup["linkUrl"].startswith("https://aaimang.github.io/")
+    assert harness.sent() == []  # nothing went to the room
+    assert harness.responder.calls == []
+
+
+def test_bb_status(harness):
+    msg = harness.ext.fire(TO_SERVER, "Chat", "/BB status", 0, 7)
+    assert msg.is_blocked
+    [popup] = popups(harness)
+    page = popup["message"]
+    assert "<b>Bot:</b> <font color=" in page and ">ON</font>" in page
+    assert "game-us.habbo.com" in page and "<b>Logged in as:</b> Owner" in page
+    assert "4 in the room" in page and "1 name(s)" in page and "$0.00 of $1.00" in page
+
+
+def test_bb_status_shows_problems_in_red(tmp_path):
+    h = Harness(tmp_path)
+    try:
+        h.bot.fatal_error = "bad <key>"
+        h.ext.fire(TO_CLIENT, "RoomReady", "model_a", 1)  # new room, user list empty
+        h.ext.fire(TO_SERVER, "Chat", "/bb status", 0, 7)
+        [popup] = popups(h)
+        assert "PAUSED: bad &lt;key&gt;</font>" in popup["message"]
+        assert "not loaded, re-enter the room</font>" in popup["message"]
+    finally:
+        h.close()
+
+
+def test_bb_test_sends_a_bubble_and_a_popup(harness):
+    harness.ext.fire(TO_SERVER, "Chat", "/bb test", 0, 7)
+    assert [p["display"] for _, (_, p) in hotel_windows(harness)] == ["BUBBLE", "POP_UP"]
+
+
+def test_bb_needs_a_word_boundary_and_is_owner_only(harness):
+    msg = harness.ext.fire(TO_SERVER, "Chat", "/bbq tonight", 0, 7)
+    assert not msg.is_blocked
+    harness.user_says(FRIEND_IDX, "/bb status")
+    assert hotel_windows(harness) == []
+
+
+def test_bb_prefix_is_configurable(tmp_path):
+    h = Harness(tmp_path, {"notify": {"prefix": "/me2"}})
+    try:
+        assert h.ext.fire(TO_SERVER, "Chat", "/me2", 0, 7).is_blocked
+        assert not h.ext.fire(TO_SERVER, "Chat", "/bb", 0, 7).is_blocked
+        assert [p["display"] for _, (_, p) in hotel_windows(h)] == ["POP_UP"]
+    finally:
+        h.close()
+
+
+def test_cooldown_bubble_once_per_gap(harness):
+    harness.user_says(FRIEND_IDX, "/q one")
+    harness.user_says(FRIEND_IDX, "/q two")
+    harness.user_says(FRIEND_IDX, "/q three")
+    texts = bubbles(harness)
+    assert len(texts) == 1
+    assert texts[0].startswith("Bobba Buddy: Friend: /q on cooldown, ")
+    assert len(harness.responder.calls) == 1
+
+
+def test_cooldown_bubble_can_be_turned_off(tmp_path):
+    h = Harness(tmp_path, {"notify": {"cooldowns": False}})
+    try:
+        h.user_says(FRIEND_IDX, "/q one")
+        h.user_says(FRIEND_IDX, "/q two")
+        assert bubbles(h) == []
+    finally:
+        h.close()
+
+
+def test_nothing_in_the_hotel_when_switched_off(tmp_path):
+    h = Harness(tmp_path, {"notify": {"in_hotel": False}})
+    try:
+        h.user_says(FRIEND_IDX, "/q one")
+        h.user_says(FRIEND_IDX, "/q two")
+        assert bubbles(h) == []
+        assert h.ext.fire(TO_SERVER, "Chat", "/bb help", 0, 7).is_blocked  # still yours
+    finally:
+        h.close()
+
+
+def test_unknown_user_asks_to_reenter_the_room(harness):
+    harness.user_says(42, "/q who am I?")
+    [text] = bubbles(harness)
+    assert "Re-enter the room" in text
+
+
+def test_budget_and_api_errors_bubble(tmp_path):
+    h = Harness(
+        tmp_path,
+        responder=FakeResponder(replies=[Reply(ReplyKind.FATAL, "", error="invalid x-api-key")]),
+    )
+    try:
+        h.user_says(FRIEND_IDX, "/q hi")
+        [text] = bubbles(h)
+        assert "Bot paused: invalid x-api-key" in text
+    finally:
+        h.close()
+
+
+def test_connection_end_clears_the_queue(harness):
+    harness.bot.hotel.stop()
+    harness.user_says(FRIEND_IDX, "/q one")
+    harness.user_says(FRIEND_IDX, "/q two")
+    harness.ext.event("connection_end")
+    harness.bot.hotel.flush()
+    assert harness.ext.windows() == []

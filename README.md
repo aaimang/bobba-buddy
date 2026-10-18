@@ -18,6 +18,10 @@ A G-Earth extension in Python for the Habbo AIR client. It answers whitelisted c
 | `/joke [topic]` | Tells one clean joke. |
 | `/q reset` | Forgets your `/q` history. |
 | `/q` | Lists the commands. |
+| `/bb help` | Just for you: a Habbo popup with the commands. The room never sees it. |
+| `/bb status` | Just for you: a popup with the bot's state (on/off, room, whitelist, spend today). |
+
+**In-hotel notifications:** the bot also shows small Habbo notification bubbles that only you see: when settings are saved or `config.toml` has an error, when a command is refused because of a cooldown (yours or a friend's), when something goes wrong (Claude errors, budget reached, chat muted), and when you need to re-enter the room. Turn them off, or pick which ones, under **Advanced → In-hotel notifications**. These need G-Earth's **Developer mode** (see [Developer mode](#developer-mode-g-earth-packet-safety)); without it the messages only go to the G-Earth console.
 
 Replies come back the way the question was asked: chat gets chat, shout gets shout, whisper gets whisper. Each reply is split into bubbles of up to 100 characters (Habbo's limit), sent 2 seconds apart.
 
@@ -196,6 +200,7 @@ The [settings window](#settings-window) edits this file for you. Changes are pic
 - **`[avatar]`:** copying, autopilot weights, anti-idle, and the Habbo Club switches `hc_dances` / `hc_expressions`. See [Avatar behaviour](#avatar-behaviour).
 - **`[room]`:** `rejoin_on_start` and `return_on_exit`. See [Staying in your room](#staying-in-your-room).
 - **`[updates]`:** `check` (on by default) asks GitHub once a day for a newer release. See [Updating](#updating).
+- **`[notify]`:** in-hotel bubbles and popups, only on your screen. `in_hotel` (all of them), `prefix` (your own command, `/bb`), `config_changes`, `cooldowns`, `errors`, `room`, and `min_gap_s` (seconds before the same bubble shows again, 10).
 
 If Habbo doesn't send chat that starts with `/`, change the prefixes to `!q`, `!roast`, etc.
 
@@ -298,12 +303,13 @@ uv run --no-project --with pymupdf python scripts/make_icons.py   # only when th
 
 Logs go to `logs/bobba-buddy.log` in the project folder (rotating, about 6 MB kept). The settings window's Extension Logs page shows the same lines live.
 
-**Versioning.** Current version: **1.5.1**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.6.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
+| `/bb help` does nothing, or no notification bubbles appear | Turn on Developer mode (Extra tab). G-Earth only lets an extension show these with it on. `/bb test` shows one bubble and one popup to check. |
 | Replies or avatar actions don't show up; G-Earth logs "attempted to send an unsafe packet" | Turn on Developer mode (Extra tab), or do that action once by hand. See [Developer mode](#developer-mode-g-earth-packet-safety). |
 | Console: "Re-enter the room" | The bot doesn't have the user list. Turn on `rejoin_on_start`, or leave and re-enter the room. |
 | Console: "No saved room to rejoin yet" | Enter a room once with the bot running; it's remembered from then on. |

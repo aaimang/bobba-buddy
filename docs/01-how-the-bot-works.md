@@ -90,12 +90,15 @@ G-Python runs **every packet callback on a single thread**, and G-Earth **holds 
 | G-Python event threads | each event | `connection_start`, `connection_end`, `double_click` (▶) callbacks |
 | `buddy-worker-N` | `ThreadPoolExecutor` (`workers = 2`) | Claude calls |
 | `buddy-outbox` | `Outbox.start()` | Paced chat bubbles |
+| `buddy-notify` | `HotelNotifier.start()` | Notification bubbles and popups sent to your own client (`hotelui`) |
 | `buddy-avatar` | `AvatarController.start()` | Copies, autopilot, wake-ups |
 | timers | `threading.Timer` | Room rejoin and return |
 | `buddy-update` | `__main__.main()` | Asks GitHub for the latest release at most once a day (`updates.UpdateChecker`) |
 | `buddy-updater` | the settings window's **Update now** | Fast-forwards to the release tag, runs `uv sync` and the installer (`updater.Updater`), then exits |
 
 Shared state (`RoomState`, `AccessControl`, `ConversationMemory`, `Budget`) is protected by locks.
+
+**Windows only you see.** `/bb help`, `/bb status` and the notification bubbles are `NotificationDialog` packets the bot makes up and sends to your own client with `send_to_client`; nothing goes to the server, and the `/bb` chat line itself is blocked so the room never sees it. Bubbles (`display=BUBBLE`) show the logo but print HTML tags as text; popups (`display=POP_UP`) also take a link button and `<b>`, `<i>`, `<u>` and `<font color>`, so anything not written by the bot is escaped first. The same bubble shows at most once every `[notify] min_gap_s` seconds. G-Earth only lets an extension send these with Developer mode on.
 
 ## Startup and shutdown
 

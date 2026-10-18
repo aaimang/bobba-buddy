@@ -97,3 +97,23 @@ def test_reload_now_skips_the_wait(tmp_path):
     os.utime(path, (5, 5))
     assert store.get().whitelist == {"ali"}  # next check is a minute away
     assert store.reload_now().whitelist == {"bob"}
+
+
+def test_notify_defaults_and_overrides():
+    assert parse_config({}).notify.prefix == "/bb"
+    cfg = parse_config({"notify": {"prefix": "/me", "cooldowns": False, "min_gap_s": 3}})
+    assert cfg.notify.prefix == "/me" and not cfg.notify.cooldowns and cfg.notify.min_gap_s == 3.0
+
+
+@pytest.mark.parametrize(
+    ("notify", "message"),
+    [
+        ({"prefix": "bb"}, "starting with '/'"),
+        ({"prefix": "/b b"}, "starting with '/'"),
+        ({"prefix": "/q"}, "already used by q"),
+        ({"min_gap_s": -1}, "min_gap_s"),
+    ],
+)
+def test_notify_validation(notify, message):
+    with pytest.raises(ConfigError, match=message):
+        parse_config({"notify": notify})

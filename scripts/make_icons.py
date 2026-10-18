@@ -71,6 +71,7 @@ BOX_ICONS = (
     "home",
     "info-circle",
     "terminal",
+    "bell",
 )
 TOOL_ICONS = (
     "filter",

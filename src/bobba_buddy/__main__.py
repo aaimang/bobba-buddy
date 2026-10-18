@@ -31,7 +31,7 @@ from dotenv import load_dotenv
 from . import updates
 from .bot import EXTENSION_INFO, EXTENSION_SETTINGS, BobbaBuddy
 from .budget import Budget
-from .config import ConfigError, ConfigStore
+from .config import Config, ConfigError, ConfigStore
 from .gpython import Extension
 from .guard import configure_dump_dir
 from .llm import ClaudeResponder
@@ -189,10 +189,17 @@ def run_session(
         open_settings=settings.request_open,
     )
     settings.bridge = BotBridge(bot, store)
-    store.on_reload = lambda cfg: bot.notice(
-        f"Config reloaded ({len(cfg.whitelist)} whitelisted)", "blue"
-    )
-    store.on_error = lambda err: bot.notice(f"Config error, keeping old settings: {err}", "red")
+
+    def on_reload(cfg: Config) -> None:
+        bot.notice(f"Config reloaded ({len(cfg.whitelist)} whitelisted)", "blue")
+        bot.hotel.notify("config", f"Settings saved: {len(cfg.whitelist)} on the whitelist.")
+
+    def on_error(err: str) -> None:
+        bot.notice(f"Config error, keeping old settings: {err}", "red")
+        bot.hotel.notify("config", f"Config error, kept the old settings: {err}")
+
+    store.on_reload = on_reload
+    store.on_error = on_error
     bot.install()
     try:
         if not start_extension(ext, stop):

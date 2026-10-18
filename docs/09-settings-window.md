@@ -28,7 +28,7 @@ Closing the window doesn't stop the bot. It keeps running in G-Earth.
 | **Room** | Rejoining the last room after a restart, and going back after landing on the hotel view. |
 | **Claude** | Model, thinking effort, max tokens, timeout, retries, searches per `/q`, and `/q` memory. |
 | **Budget** | Daily budget and question length; the number of Claude calls at once and the queue size (these two apply after the extension restarts). |
-| **Advanced** | Chat timing and bubble style, packet safety (`require_seen_packets`), the prices used for the budget, the room reload packet, and update checks. |
+| **Advanced** | Chat timing and bubble style, packet safety (`require_seen_packets`), the prices used for the budget, the room reload packet, in-hotel notifications (`[notify]`) and update checks. |
 | **Extension Logs** | The bot's log, live, in a terminal view (since 1.4.0). See [Extension Logs](#extension-logs) below. |
 | **About** | The **Updates** box (status, Check now, Update now) and the logo, version, GitHub and docs links, and the fan-project disclaimer. |
 

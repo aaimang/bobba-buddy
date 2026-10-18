@@ -40,7 +40,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
-from . import __version__
+from . import __version__, updates
 from .access import AccessControl, Denial, DenyReason, Ticket, is_allowed
 from .avatar import AVATAR_PACKETS, AvatarController
 from .budget import Budget
@@ -48,6 +48,7 @@ from .commands import SPECS, ParsedCommand, parse_command, usage_text
 from .config import Config
 from .gpython import Direction, HMessage, HPacket
 from .guard import guarded, report_bad_packet, reset_reports
+from .hotelui import DOCS_URL, HotelNotifier, build_bubble, build_popup, escape, green, red
 from .llm import ReplyKind, Responder
 from .memory import ConversationMemory
 from .outbox import Bubble, Outbox
@@ -129,6 +130,7 @@ class BobbaBuddy:
         memory: ``/q`` conversation memory.
         outbox: Paced chat sender.
         avatar: Copying, autopilot and anti-idle.
+        hotel: Notification bubbles and windows on the owner's own client.
         enabled: Whether the bot is on (the switch in the settings window).
         fatal_error: Set when the API rejects the key or model; the bot pauses until
             switched back on.
@@ -211,6 +213,13 @@ class BobbaBuddy:
             clock=clock,
             rng=rng,
         )
+        self.hotel = HotelNotifier(
+            ext,
+            enabled=self._notify_enabled,
+            min_gap_s=lambda: self._config().notify.min_gap_s,
+            fallback=lambda text: self.notice_once("hotel-ui", text, "orange"),
+            clock=clock,
+        )
 
     # --- setup ---------------------------------------------------------------------
 
@@ -243,6 +252,7 @@ class BobbaBuddy:
             avatar_thread: Start the avatar thread; tests drive it by hand instead.
         """
         self.outbox.start()
+        self.hotel.start()
         if avatar_thread:
             self.avatar.start()
 
@@ -252,6 +262,7 @@ class BobbaBuddy:
             if timer is not None:
                 timer.cancel()
         self.outbox.stop()
+        self.hotel.stop()
         self.avatar.stop()
         self._executor.shutdown(wait=False, cancel_futures=True)
 
@@ -281,6 +292,24 @@ class BobbaBuddy:
         if key not in self._notified:
             self._notified.add(key)
             self.notice(text, color)
+
+    def _notify_enabled(self, kind: str) -> bool:
+        """Whether a kind of hotel notification is switched on in ``[notify]``.
+
+        Args:
+            kind: ``in_hotel``, ``config``, ``cooldown``, ``error`` or ``room``.
+
+        Returns:
+            The setting (``True`` for kinds it doesn't know).
+        """
+        cfg = self._config().notify
+        return {
+            "in_hotel": cfg.in_hotel,
+            "config": cfg.config_changes,
+            "cooldown": cfg.cooldowns,
+            "error": cfg.errors,
+            "room": cfg.room,
+        }.get(kind, True)
 
     def open_settings(self) -> None:
         """G-Earth's ▶ button: ask the main thread to open the settings window."""
@@ -354,6 +383,7 @@ class BobbaBuddy:
             self.notice(
                 "Unknown packet names, some features won't work: " + ", ".join(missing), "red"
             )
+            self.hotel.notify("error", "Some packets are unknown; see the G-Earth console.")
 
         outgoing = packet_infos.get(Direction.TO_SERVER, {})
         if "InfoRetrieve" in outgoing:
@@ -388,6 +418,7 @@ class BobbaBuddy:
         self.room.reset_session()
         self.outbox.clear()
         self.avatar.reset()
+        self.hotel.clear()
         self.notice("Disconnected from the hotel.", "orange")
 
     def _on_users(self, msg: HMessage) -> None:
@@ -561,6 +592,7 @@ class BobbaBuddy:
         if seconds > 0:
             self.outbox.pause_for(seconds + self._config().chat.flood_margin_s)
             self.notice(f"Habbo muted chat for {seconds}s, replies paused.", "orange")
+            self.hotel.notify("error", f"Habbo muted chat for {seconds}s, replies paused.")
 
     # --- chat ----------------------------------------------------------------------
 
@@ -586,6 +618,9 @@ class BobbaBuddy:
                 "Got a command from someone not in my user list. "
                 "Re-enter the room so I can load it.",
             )
+            self.hotel.notify(
+                "room", "Someone used a command but I can't see who. Re-enter the room."
+            )
             return
         if user.kind is not UserKind.PLAYER:
             return
@@ -602,6 +637,12 @@ class BobbaBuddy:
         event = parse_outgoing_chat(mode, msg.packet)
         if self._is_own_reply(event.text):
             return  # one of the bot's own bubbles
+        own = self._config().notify.prefix.strip().lower()
+        words = event.text.strip().split(maxsplit=1)
+        if words and words[0].lower() == own:
+            msg.is_blocked = True  # the room never sees it
+            self._owner_command(words[1] if len(words) > 1 else "")
+            return
         self.room.note_outgoing(mode, event.text, event.style, event.tail)
         command = parse_command(event.text, self._config().commands)
         if command is None:
@@ -636,6 +677,7 @@ class BobbaBuddy:
                 "and switch the bot back ON.",
                 "red",
             )
+            self.hotel.notify("error", f"Bot paused: {self.fatal_error}", key="fatal")
             return
         if not is_owner and not is_allowed(asker, cfg.whitelist, self.room.own_name):
             log.info("ignoring %s from non-whitelisted %s", command.name, asker)
@@ -665,6 +707,8 @@ class BobbaBuddy:
             target = self.room.find_player(target_name)
             if target is None:
                 self._reply(route, f"I can't see {target_name} here.", 1)
+                if self.room.user_count == 0:
+                    self.hotel.notify("room", "My user list is empty. Re-enter the room.")
                 return
             if target.name.lower() in cmd_cfg.opt_out:
                 self._reply(route, f"{target.name} opted out of roasts.", 1)
@@ -678,11 +722,17 @@ class BobbaBuddy:
             target_cooldown_s=cmd_cfg.target_cooldown_s,
         )
         if isinstance(acquired, Denial):
+            wait = math.ceil(acquired.retry_in_s)
+            prefix = cmd_cfg.prefix
             if acquired.reason is DenyReason.TARGET_COOLDOWN and target is not None:
-                wait = math.ceil(acquired.retry_in_s)
                 self._reply(route, f"Give {target.name} a break, try again in {wait}s.", 1)
+                text = f"{asker}: {prefix} {target.name} on cooldown, {wait}s left"
+            elif acquired.reason is DenyReason.IN_FLIGHT:
+                text = f"{asker}: still answering their last {prefix}"
             else:
-                log.info("%s from %s denied: %s", command.name, asker, acquired.reason.value)
+                text = f"{asker}: {prefix} on cooldown, {wait}s left"
+            log.info("%s from %s denied: %s", command.name, asker, acquired.reason.value)
+            self.hotel.notify("cooldown", text, key=f"cd:{asker.lower()}:{command.name}")
             return
         ticket = acquired
 
@@ -694,6 +744,11 @@ class BobbaBuddy:
                 "budget",
                 f"Daily budget (${cfg.limits.daily_budget_usd:.2f}) "
                 "reached; answering again after midnight.",
+            )
+            self.hotel.notify(
+                "error",
+                f"Daily budget (${cfg.limits.daily_budget_usd:.2f}) reached.",
+                key="budget",
             )
             return
 
@@ -788,6 +843,7 @@ class BobbaBuddy:
                 self._reply(route, MSG_REFUSAL, 1)
             elif reply.kind is ReplyKind.BUSY:
                 self._reply(route, MSG_BUSY, 1)
+                self.hotel.notify("error", "Claude is busy; a command wasn't answered.")
             elif reply.kind is ReplyKind.FATAL:
                 self.fatal_error = reply.error or "Claude API rejected the request"
                 self.notice(
@@ -795,14 +851,109 @@ class BobbaBuddy:
                     "model, then press ▶ in G-Earth and switch the bot back ON.",
                     "red",
                 )
+                self.hotel.notify("error", f"Bot paused: {self.fatal_error}", key="fatal")
             else:
                 self._reply(route, MSG_ERROR, 1)
+                self.hotel.notify(
+                    "error", f"Claude error on {command.name}: {reply.error or 'unknown'}"
+                )
         except Exception:
             log.exception("command %s from %s failed", command.name, asker)
         finally:
             self.access.release(ticket, refund=refund)
             with self._pending_lock:
                 self._pending -= 1
+
+    # --- the owner's own command (/bb) ----------------------------------------------
+
+    def _owner_command(self, arg: str) -> None:
+        """``/bb help``, ``/bb status`` or ``/bb test``: popups on the owner's client.
+
+        Args:
+            arg: The text after the prefix.
+        """
+        word = arg.strip().lower()
+        log.info("owner command: %s", word or "help")
+        if word == "status":
+            self.hotel.send(build_popup(self.status_text(), title="Bobba Buddy status"))
+        elif word == "test":
+            self.hotel.send(build_bubble("Test: notification bubbles work."))
+            self.hotel.send(build_popup("Test: popups work.", title="Bobba Buddy test"))
+        else:
+            self.hotel.send(
+                build_popup(
+                    self.help_text(),
+                    title=f"Bobba Buddy {__version__}",
+                    link=(DOCS_URL, "Open the docs"),
+                )
+            )
+
+    def help_text(self) -> str:
+        """The ``/bb help`` popup text (the popup understands ``<b>`` and ``<font>``).
+
+        Returns:
+            The text.
+        """
+        cfg = self._config()
+        lines = ["<b>Commands</b> (you and the whitelist)"]
+        for name, spec in SPECS.items():
+            cmd = cfg.commands[name]
+            if cmd.enabled:
+                lines.append(f"<b>{escape(cmd.prefix)}</b> {escape(spec.usage)}")
+        if cfg.commands["q"].enabled:
+            lines.append(f"<b>{escape(cfg.commands['q'].prefix)} reset</b> forget the conversation")
+        own = escape(cfg.notify.prefix)
+        lines += [
+            "",
+            "<b>Just for you</b> (the room doesn't see these)",
+            f"<b>{own} help</b> this window",
+            f"<b>{own} status</b> what the bot is doing",
+            "",
+            "Settings: the ▶ button next to Bobba Buddy in G-Earth.",
+        ]
+        return "\n".join(lines)
+
+    def status_text(self) -> str:
+        """The ``/bb status`` popup text, with problems in red.
+
+        Returns:
+            The text.
+        """
+        cfg = self._config()
+        info = getattr(self._ext, "connection_info", None) or {}
+        if self.fatal_error:
+            state = red(f"PAUSED: {escape(self.fatal_error)}")
+        elif self.enabled:
+            state = green("ON")
+        else:
+            state = red("OFF")
+        version = __version__
+        checker = updates.current()
+        if checker is not None and checker.available and checker.latest is not None:
+            version += f" ({escape(checker.latest.version)} is available, press ▶ to update)"
+        users = self.room.user_count
+        room = f"{users} in the room" if users else red("not loaded, re-enter the room")
+        budget = cfg.limits.daily_budget_usd
+        spent = f"${self._budget.spent_today:.2f}"
+        if budget > 0:
+            spent += f" of ${budget:.2f}"
+            if not self._budget.can_spend():
+                spent = red(spent + ", budget reached")
+        else:
+            spent += " (no cap)"
+        with self._pending_lock:
+            pending = self._pending
+        rows = [
+            ("Bot", state),
+            ("Version", version),
+            ("Hotel", escape(info.get("host", "not connected"))),
+            ("Logged in as", escape(self.room.own_name or "?")),
+            ("Room", room),
+            ("Whitelist", f"{len(cfg.whitelist)} name(s)"),
+            ("Spent today", spent),
+            ("Waiting to answer", str(pending)),
+        ]
+        return "\n".join(f"<b>{label}:</b> {value}" for label, value in rows)
 
     # --- sending -------------------------------------------------------------------
 
@@ -834,12 +985,14 @@ class BobbaBuddy:
                 "unseen-whisper",
                 "Can't send whisper replies yet: whisper anyone once by hand so G-Earth allows it.",
             )
+            self.hotel.notify("error", "Whisper anyone once by hand so I can whisper replies.")
         else:
             self.notice_once(
                 "unseen-chat",
                 "Can't reply yet: say anything in chat once by hand "
                 "so G-Earth allows the bot to chat.",
             )
+            self.hotel.notify("error", "Say anything in chat once so I can reply.")
         return None
 
     def _reply(self, route: Route, text: str, max_bubbles: int) -> None:

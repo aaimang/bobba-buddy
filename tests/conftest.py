@@ -43,6 +43,8 @@ IN_NAMES = [
     "Sleep",
     "FloorHeightMap",
     "RoomEntryTile",
+    "NotificationDialog",
+    "MOTDNotification",
 ]
 OUT_NAMES = [
     "Chat",
@@ -254,6 +256,7 @@ class FakeExtension:
         intercepts: Callbacks keyed by ``(direction, packet name)``.
         events: Callbacks keyed by event name.
         sent: Every packet sent to the server.
+        client_sent: Every packet sent to the client (hotel windows).
         console: ``(color, text)`` lines written to the G-Earth console.
         packet_infos: Known packet names per direction, like G-Earth provides.
         connection_info: The game connection details G-Earth provides.
@@ -262,6 +265,7 @@ class FakeExtension:
     intercepts: dict = field(default_factory=lambda: defaultdict(list))
     events: dict = field(default_factory=lambda: defaultdict(list))
     sent: list = field(default_factory=list)
+    client_sent: list = field(default_factory=list)
     console: list = field(default_factory=list)
     packet_infos: dict = field(
         default_factory=lambda: {
@@ -304,6 +308,43 @@ class FakeExtension:
             pkt: The packet.
         """
         self.sent.append(pkt)
+
+    def send_to_client(self, pkt):
+        """Record a packet sent to the client.
+
+        Args:
+            pkt: The packet.
+
+        Returns:
+            ``True``, like g-python when it could send.
+        """
+        self.client_sent.append(pkt)
+        return True
+
+    def windows(self) -> list[tuple[str, Any]]:
+        """Decode the hotel windows sent to the client.
+
+        Returns:
+            ``("NotificationDialog", (type, {key: value}))`` or
+            ``("MOTDNotification", [page, ...])`` per packet, in send order.
+        """
+        out: list[tuple[str, Any]] = []
+        for pkt in self.client_sent:
+            pkt.reset()
+            name = pkt.incomplete_identifier
+            if name == "NotificationDialog":
+                kind = pkt.read_string(encoding="utf-8")
+                params = {
+                    pkt.read_string(encoding="utf-8"): pkt.read_string(encoding="utf-8")
+                    for _ in range(pkt.read_int())
+                }
+                out.append((name, (kind, params)))
+            elif name == "MOTDNotification":
+                out.append(
+                    (name, [pkt.read_string(encoding="utf-8") for _ in range(pkt.read_int())])
+                )
+            pkt.reset()
+        return out
 
     def write_to_console(self, text, color="black", mention_title=True):
         """Record a console line.
