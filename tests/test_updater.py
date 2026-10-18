@@ -8,24 +8,27 @@ from pathlib import Path
 import pytest
 
 from bobba_buddy import updater as updater_mod
-from bobba_buddy.updater import Updater, find_tool, read_version
+from bobba_buddy.updater import Updater, _clean_env, find_tool, read_version
 
 
 class FakeShell:
     """Answers commands from a table of (first arguments → (code, output))."""
 
     def __init__(self, **overrides):
-        """A checkout on main, clean, behind origin/main, with a changed uv.lock."""
+        """A clean main checkout behind the v1.5.0 tag (tag1500), with a changed uv.lock."""
         self.answers = {
             "rev-parse --is-inside-work-tree": (0, "true"),
             "rev-parse --abbrev-ref HEAD": (0, "main"),
             "rev-parse --abbrev-ref --symbolic-full-name @{u}": (0, "origin/main"),
             "status --porcelain --untracked-files=no": (0, ""),
             "fetch --tags origin": (0, ""),
+            "rev-parse --verify --quiet refs/tags/v1.5.0^{commit}": (0, "tag1500"),
+            "merge-base --is-ancestor tag1500 origin/main": (0, ""),
             "rev-parse HEAD": (0, "abc123"),
-            "merge-base --is-ancestor HEAD origin/main": (0, ""),
-            "diff --quiet abc123 origin/main -- uv.lock": (1, ""),
-            "merge --ff-only origin/main": (0, "Fast-forward"),
+            "merge-base --is-ancestor HEAD tag1500": (0, ""),
+            "show tag1500:src/bobba_buddy/__init__.py": (0, '__version__ = "1.5.0"\n'),
+            "diff --quiet abc123 tag1500 -- uv.lock": (1, ""),
+            "merge --ff-only tag1500": (0, "Fast-forward"),
             "sync": (0, "Resolved 54 packages"),
             "install_gearth.py": (0, "Done."),
         }
@@ -41,7 +44,7 @@ class FakeShell:
         raise AssertionError(f"unexpected command: {command}")
 
 
-def make(tmp_path, shell, *, target="1.5.0", current="1.4.1", tools=("git", "uv")):
+def make(tmp_path, shell, *, target="1.5.0", tag=None, current="1.4.1", tools=("git", "uv")):
     project = tmp_path / "bobba-buddy"
     (project / "src" / "bobba_buddy").mkdir(parents=True)
     (project / "src" / "bobba_buddy" / "__init__.py").write_text('__version__ = "1.5.0"\n')
@@ -49,6 +52,7 @@ def make(tmp_path, shell, *, target="1.5.0", current="1.4.1", tools=("git", "uv"
         project,
         target,
         current,
+        tag=tag,
         run=shell,
         which=lambda name: f"/usr/bin/{name}" if name in tools else None,
         python="/venv/bin/python",
@@ -64,13 +68,14 @@ def test_successful_update_runs_every_step_in_order(tmp_path, caplog):
     assert "Restart G-Earth" in up.message and "keeps running 1.4.1" in up.message
     steps = [c for c in shell.calls if not c.startswith("git rev-parse") and "status" not in c]
     assert steps[0] == "git fetch --tags origin"
-    assert steps.index("git merge --ff-only origin/main") < steps.index("uv sync")
+    assert steps.index("git merge --ff-only tag1500") < steps.index("uv sync")
+    assert "git merge --ff-only origin/main" not in shell.calls  # the tag, not main's tip
     assert steps[-1].endswith("install_gearth.py")
-    assert "updater: $ git merge --ff-only origin/main" in caplog.text  # shows in Extension Logs
+    assert "updater: $ git merge --ff-only tag1500" in caplog.text  # shows in Extension Logs
 
 
 def test_uv_sync_skipped_when_the_lock_did_not_change(tmp_path):
-    shell = FakeShell(**{"diff --quiet abc123 origin/main -- uv.lock": (0, "")})
+    shell = FakeShell(**{"diff --quiet abc123 tag1500 -- uv.lock": (0, "")})
     up = make(tmp_path, shell)
     assert up.run()
     assert "uv sync" not in shell.calls
@@ -92,8 +97,17 @@ def test_uv_sync_skipped_when_the_lock_did_not_change(tmp_path):
             {"status --porcelain --untracked-files=no": (0, " M README.md")},
             "README.md has local changes",
         ),
-        ({"merge-base --is-ancestor HEAD origin/main": (1, "")}, "can't fast-forward"),
+        ({"merge-base --is-ancestor HEAD tag1500": (1, "")}, "can't fast-forward"),
         ({"fetch --tags origin": (128, "could not resolve host")}, "internet connection"),
+        (
+            {"rev-parse --verify --quiet refs/tags/v1.5.0^{commit}": (1, "")},
+            "v1.5.0 isn't on GitHub yet",
+        ),
+        ({"merge-base --is-ancestor tag1500 origin/main": (1, "")}, "isn't on main"),
+        (
+            {"show tag1500:src/bobba_buddy/__init__.py": (0, '__version__ = "1.4.9"\n')},
+            "contains version 1.4.9, expected 1.5.0",
+        ),
     ],
 )
 def test_unsafe_checkouts_are_refused(tmp_path, override, reason):
@@ -101,7 +115,30 @@ def test_unsafe_checkouts_are_refused(tmp_path, override, reason):
     up = make(tmp_path, shell)
     assert not up.run()
     assert up.state == "failed" and reason in up.message
-    assert "git merge --ff-only origin/main" not in shell.calls  # nothing changed
+    assert not any(c.startswith("git merge ") for c in shell.calls)  # nothing changed
+
+
+@pytest.mark.parametrize("tag", ["--upload-pack=evil", "main", "v1.5", "v1.5.0;rm"])
+def test_odd_tags_are_refused_before_git_runs(tmp_path, tag):
+    shell = FakeShell()
+    up = make(tmp_path, shell, tag=tag)
+    assert not up.run()
+    assert "doesn't look like vX.Y.Z" in up.message and shell.calls == []
+
+
+def test_tag_defaults_to_v_target(tmp_path):
+    assert make(tmp_path, FakeShell()).tag == "v1.5.0"
+
+
+def test_api_key_is_not_passed_to_git_or_uv(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-secret")
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://example.test")
+    monkeypatch.setenv("VIRTUAL_ENV", "/somewhere/.venv")
+    monkeypatch.setenv("PATH", "/usr/bin")
+    env = _clean_env()
+    assert not any(k.startswith("ANTHROPIC_") for k in env)
+    assert "VIRTUAL_ENV" not in env
+    assert env["PATH"] == "/usr/bin" and env["GIT_TERMINAL_PROMPT"] == "0"
 
 
 def test_missing_tools(tmp_path):

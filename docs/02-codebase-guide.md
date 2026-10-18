@@ -29,7 +29,7 @@ bobba-buddy/
 │  ├─ memory.py              per-user /q history
 │  ├─ config.py              typed config, validation, hot reload
 │  ├─ updates.py             UpdateChecker: asks GitHub for the latest release, once a day
-│  ├─ updater.py             Updater: one-click update (git pull, uv sync, installer)
+│  ├─ updater.py             Updater: one-click update (release tag, uv sync, installer)
 │  ├─ guard.py               exception guard + bad-packet reporting
 │  ├─ gpython.py             single import point for g_python (silences its warnings)
 │  ├─ assets/logo.png        the logo, for the settings window (same file as the docs logo)

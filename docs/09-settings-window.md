@@ -89,13 +89,13 @@ Since 1.5.0 the bot asks GitHub once a day whether there's a newer release. When
 
 | Banner button | What it does |
 |---|---|
-| **Update now** | Asks first, then runs `git pull`, `uv sync` (only if the dependencies changed) and the G-Earth installer. The banner shows each step; every command's output also goes to Extension Logs. |
+| **Update now** | Asks first, then downloads the release's git tag (for example `v1.5.1`), runs `uv sync` (only if the dependencies changed) and the G-Earth installer. The banner shows each step; every command's output also goes to Extension Logs. |
 | **View release** | Opens the release notes on GitHub. |
 | **✕** | Hides the banner until a newer version comes out. |
 
 When the update is done, the banner turns green and asks you to **restart G-Earth**: the bot keeps running the old version until G-Earth starts it again. It can't restart itself, because G-Earth gives each extension a one-time login when it launches it.
 
-**Update now** only runs when it's safe. The project must be a git checkout on `main` that tracks GitHub, with no edited files (your `config.toml`, `.env`, `logs/` and `state/` don't count; git ignores them), and the update mustn't be a new major version, which could change `config.toml`. Otherwise the banner turns red, says why, and **How to update** opens the About page with the steps to run by hand.
+**Update now** only runs when it's safe. The project must be a git checkout on `main` that tracks GitHub, with no edited files (your `config.toml`, `.env`, `logs/` and `state/` don't count; git ignores them), and the update mustn't be a new major version, which could change `config.toml`. The release's tag must also be on `main` on GitHub and contain the version the banner shows; `main` then moves to exactly that tag, never to newer unreleased commits. Your Claude API key isn't passed to git, uv or the installer. Otherwise the banner turns red, says why, and **How to update** opens the About page with the steps to run by hand.
 
 The **Updates** box on the About page shows the same status, when GitHub was last asked, a **Check now** button, and the manual steps when an update is available. To stop the daily check, turn off **Advanced → Update checks** (it sends your IP address to GitHub).
 

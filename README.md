@@ -164,7 +164,7 @@ uv run python -m bobba_buddy.settings --page "Extension Logs" --demo-logs
 
 The bot asks GitHub once a day whether there's a newer release (turn that off under **Advanced → Update checks**, or `[updates] check = false`). When there is, the settings window shows a banner and the G-Earth console says so once.
 
-**Update now** does the update for you: it runs `git pull`, `uv sync` (only if the dependencies changed) and the G-Earth installer. Then **restart G-Earth** to start the new version; the bot keeps running the old one until then. Your `config.toml`, `.env`, logs and state are never touched.
+**Update now** does the update for you: it downloads the release's tag with git (exactly that release, not newer unreleased work), runs `uv sync` (only if the dependencies changed) and the G-Earth installer. Then **restart G-Earth** to start the new version; the bot keeps running the old one until then. Your `config.toml`, `.env`, logs and state are never touched.
 
 It only updates automatically when that's safe: the project is a git checkout on `main` with no edited files, and the new version isn't a major one (which could change `config.toml`). Otherwise it tells you why and shows the steps to do by hand:
 
@@ -298,7 +298,7 @@ uv run --no-project --with pymupdf python scripts/make_icons.py   # only when th
 
 Logs go to `logs/bobba-buddy.log` in the project folder (rotating, about 6 MB kept). The settings window's Extension Logs page shows the same lines live.
 
-**Versioning.** Current version: **1.5.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.5.1**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 
@@ -316,5 +316,5 @@ Logs go to `logs/bobba-buddy.log` in the project folder (rotating, about 6 MB ke
 | A file appears in `logs/bad-packets/` | Habbo changed a packet layout. The bot keeps working around it; share the file to get the parser updated. |
 | G-Earth runs but no window opens (even after restarting) | A hidden `.DS_Store` file in G-Earth's `Extensions` folder. Finder creates it when you open the folder, and G-Earth crashes trying to start it as an extension. Run `uv run python scripts/install_gearth.py` again: it removes the file and, on macOS, leaves an empty `.DS_Store` folder in its place so Finder can't recreate it. Or delete it by hand: `rm "$HOME/Library/Application Support/G-Earth/Extensions/.DS_Store"`. See [Bugs and fixes](docs/07-bugs-and-fixes.md#22-g-earth-runs-but-its-window-never-opens). |
 | Nothing happens at all | Check that the name is in `whitelist` and that the bot is ON (the switch in the settings window, ▶ in G-Earth). Then open **Extension Logs** in the settings window and turn on **Debug** to see each step a command goes through. |
-| **Update now** says it couldn't update | It explains why: local edits, not on `main`, `git` or `uv` not found, or a major version. Update by hand with the steps in [Updating](#updating). Each step's output is in **Extension Logs**. |
+| **Update now** says it couldn't update | It explains why: local edits, not on `main`, `git` or `uv` not found, a major version, or a release tag that's missing or doesn't match. Update by hand with the steps in [Updating](#updating). Each step's output is in **Extension Logs**. |
 | I want to see what the bot is doing | Settings window → **Extension Logs**: the live log, with filters. The same lines are in `logs/bobba-buddy.log` in the project folder. |

@@ -218,9 +218,12 @@ class FakeUpdater:
 
     result = "done"
 
-    def __init__(self, project_dir, target, current):
+    last_tag = None
+
+    def __init__(self, project_dir, target, current, *, tag=None):
         """Remember the target."""
-        self.target, self.current = target, current
+        self.target, self.current, self.tag = target, current, tag
+        FakeUpdater.last_tag = tag
         self.state, self.step, self.message = "idle", "", ""
 
     def start(self):
@@ -266,6 +269,7 @@ def test_update_now_asks_then_shows_the_result(root, config, update_to):
     ui.update_now()
     ui.refresh()
     assert ui.state == "done" and notices == [("Updated.", "green")]
+    assert FakeUpdater.last_tag == "v1.5.0"  # the release's tag is what gets installed
     FakeUpdater.result = "failed"
     try:
         ui.updater = None

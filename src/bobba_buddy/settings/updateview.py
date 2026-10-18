@@ -245,12 +245,15 @@ class UpdateUI:
             return
         message = (
             f"Update Bobba Buddy to {latest.version}?\n\n"
-            f"This runs git pull and uv sync in {self._project_dir}. Your config.toml "
+            f"This downloads {latest.tag} with git and runs uv sync in {self._project_dir}. "
+            "Your config.toml "
             "and .env aren't touched.\n\nRestart G-Earth afterwards to start the new version."
         )
         if not self._confirm("Update Bobba Buddy", message):
             return
-        self.updater = self._make_updater(self._project_dir, latest.version, checker.current)
+        self.updater = self._make_updater(
+            self._project_dir, latest.version, checker.current, tag=latest.tag
+        )
         self._announced_result = self._hidden_result = False
         self.updater.start()
         self.refresh()

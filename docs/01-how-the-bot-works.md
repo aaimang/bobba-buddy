@@ -93,7 +93,7 @@ G-Python runs **every packet callback on a single thread**, and G-Earth **holds 
 | `buddy-avatar` | `AvatarController.start()` | Copies, autopilot, wake-ups |
 | timers | `threading.Timer` | Room rejoin and return |
 | `buddy-update` | `__main__.main()` | Asks GitHub for the latest release at most once a day (`updates.UpdateChecker`) |
-| `buddy-updater` | the settings window's **Update now** | Runs `git pull`, `uv sync` and the installer (`updater.Updater`), then exits |
+| `buddy-updater` | the settings window's **Update now** | Fast-forwards to the release tag, runs `uv sync` and the installer (`updater.Updater`), then exits |
 
 Shared state (`RoomState`, `AccessControl`, `ConversationMemory`, `Budget`) is protected by locks.
 

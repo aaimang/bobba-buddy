@@ -1,14 +1,20 @@
-"""One-click update: ``git pull``, ``uv sync`` and the G-Earth installer, safely.
+"""One-click update: the release's git tag, ``uv sync`` and the G-Earth installer, safely.
 
 Runs on a background thread while the bot keeps running the old code in memory;
-the new version starts when G-Earth starts the extension again. It only runs
-when that's safe: a git checkout on ``main`` that tracks ``origin/main``, no edited
-tracked files, a fast-forward, and not a new MAJOR version. Otherwise it says why
-and the window shows the manual steps. ``config.toml``, ``.env``, ``logs/`` and
+the new version starts when G-Earth starts the extension again. It installs the
+commit of the release's tag (``v1.5.1``), not whatever is newest on ``main``, and
+only when that's safe: a git checkout on ``main`` that tracks ``origin/main``, no
+edited tracked files, a tag that is on ``origin/main`` and has the expected
+version, a fast-forward, and not a new MAJOR version. Otherwise it says why and
+the window shows the manual steps. ``config.toml``, ``.env``, ``logs/`` and
 ``state/`` are git-ignored, so an update never touches them.
 
 Attributes:
     MANUAL_STEPS (tuple[str, ...]): The update done by hand.
+    TAG_PATTERN (re.Pattern[str]): What a release tag must look like; the tag comes
+        from GitHub, so anything else (like ``--option``) is refused.
+    SECRET_PREFIXES (tuple[str, ...]): Environment variables that start with one of
+        these (the Claude API key) aren't passed to git, uv or the installer.
     TOOL_DIRS (tuple[str, ...]): Extra places to look for ``git`` and ``uv``; apps
         started by G-Earth don't get the shell's ``PATH``.
 """
@@ -41,6 +47,8 @@ TOOL_DIRS = (
     "/usr/local/bin",
     "/usr/bin",
 )
+TAG_PATTERN = re.compile(r"v\d+\.\d+\.\d+")
+SECRET_PREFIXES = ("ANTHROPIC_",)
 
 Runner = Callable[[list[str], Path, float], tuple[int, str]]
 
@@ -73,8 +81,12 @@ def run_command(command: list[str], cwd: Path, timeout: float) -> tuple[int, str
 
 
 def _clean_env() -> dict[str, str]:
-    """The environment for git and uv: no password prompts, no outside virtualenv."""
-    env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    """The environment for git and uv: no password prompts, no outside virtualenv, no API key."""
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if k != "VIRTUAL_ENV" and not k.upper().startswith(SECRET_PREFIXES)
+    }
     env["GIT_TERMINAL_PROMPT"] = "0"
     return env
 
@@ -108,6 +120,22 @@ def find_tool(name: str, extra_dirs: tuple[str, ...] = TOOL_DIRS) -> str | None:
     return None
 
 
+VERSION_FILE = "src/bobba_buddy/__init__.py"
+
+
+def version_in(text: str) -> str | None:
+    """The ``__version__`` in the text of ``__init__.py``.
+
+    Args:
+        text: The file's contents.
+
+    Returns:
+        The version, or ``None`` if there isn't one.
+    """
+    match = re.search(r'__version__\s*=\s*"([^"]+)"', text)
+    return match.group(1) if match else None
+
+
 def read_version(project_dir: Path) -> str | None:
     """The version in a checkout's ``src/bobba_buddy/__init__.py``.
 
@@ -118,19 +146,19 @@ def read_version(project_dir: Path) -> str | None:
         The version, or ``None`` if it can't be read.
     """
     try:
-        text = (project_dir / "src" / "bobba_buddy" / "__init__.py").read_text("utf-8")
+        text = (project_dir / VERSION_FILE).read_text("utf-8")
     except OSError:
         return None
-    match = re.search(r'__version__\s*=\s*"([^"]+)"', text)
-    return match.group(1) if match else None
+    return version_in(text)
 
 
 class Updater:
-    """Updates one checkout to ``origin/main`` and reports how it went.
+    """Updates one checkout to a release tag and reports how it went.
 
     Attributes:
         project_dir: The checkout the bot runs from.
         target: The version being updated to.
+        tag: Its git tag, e.g. ``"v1.5.1"``.
         current: The running version.
         state: ``idle``, ``running``, ``done`` or ``failed``.
         step: What's happening now, for the banner.
@@ -144,6 +172,7 @@ class Updater:
         target: str,
         current: str,
         *,
+        tag: str | None = None,
         run: Runner = run_command,
         which: Callable[[str], str | None] = find_tool,
         python: str = sys.executable,
@@ -155,6 +184,7 @@ class Updater:
             project_dir: The checkout the bot runs from.
             target: The version being updated to, e.g. ``"1.5.0"``.
             current: The running version.
+            tag: The release's git tag; ``v<target>`` if not given.
             run: Runs one command; injectable for tests.
             which: Finds ``git``/``uv``; injectable for tests.
             python: The virtualenv's Python, for the installer.
@@ -163,6 +193,7 @@ class Updater:
         self.project_dir = project_dir
         self.target = target
         self.current = current
+        self.tag = tag or f"v{target}"
         self._run = run
         self._which = which
         self._python = python
@@ -215,6 +246,8 @@ class Updater:
                 )
         except ValueError:
             return f"can't compare versions {self.current} and {self.target}", "", ""
+        if not TAG_PATTERN.fullmatch(self.tag):
+            return f"the release tag {self.tag!r} doesn't look like vX.Y.Z", "", ""
         git = self._which("git")
         if not git:
             return "git wasn't found on this computer", "", ""
@@ -265,17 +298,35 @@ class Updater:
         code, out = self._cmd([git, "fetch", "--tags", "origin"], timeout=180)
         if code != 0:
             return self._fail("Couldn't update: git fetch failed. Check your internet connection.")
-        code, old = self._cmd([git, "rev-parse", "HEAD"])
-        old = old.strip()
-        code, _ = self._cmd([git, "merge-base", "--is-ancestor", "HEAD", "origin/main"])
+        code, commit = self._cmd(
+            [git, "rev-parse", "--verify", "--quiet", f"refs/tags/{self.tag}^{{commit}}"]
+        )
+        commit = commit.strip()
+        if code != 0 or not commit:
+            return self._fail(f"Couldn't update: the release tag {self.tag} isn't on GitHub yet.")
+        code, _ = self._cmd([git, "merge-base", "--is-ancestor", commit, "origin/main"])
         if code != 0:
             return self._fail(
-                "Couldn't update: main has commits that aren't on GitHub, so it can't "
+                f"Couldn't update: the release tag {self.tag} isn't on main. Update by hand."
+            )
+        code, old = self._cmd([git, "rev-parse", "HEAD"])
+        old = old.strip()
+        code, _ = self._cmd([git, "merge-base", "--is-ancestor", "HEAD", commit])
+        if code != 0:
+            return self._fail(
+                f"Couldn't update: main has commits that aren't in {self.tag}, so it can't "
                 "fast-forward. Update by hand."
             )
-        code, _ = self._cmd([git, "diff", "--quiet", old, "origin/main", "--", "uv.lock"])
+        code, text = self._cmd([git, "show", f"{commit}:{VERSION_FILE}"])
+        tagged = version_in(text) if code == 0 else None
+        if tagged != self.target:
+            return self._fail(
+                f"Couldn't update: {self.tag} contains version {tagged or '?'}, "
+                f"expected {self.target}. Update by hand."
+            )
+        code, _ = self._cmd([git, "diff", "--quiet", old, commit, "--", "uv.lock"])
         lock_changed = code == 1
-        code, out = self._cmd([git, "merge", "--ff-only", "origin/main"])
+        code, out = self._cmd([git, "merge", "--ff-only", commit])
         if code != 0:
             return self._fail("Couldn't update: git couldn't fast-forward. Update by hand.")
 
