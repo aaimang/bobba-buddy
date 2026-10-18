@@ -30,7 +30,7 @@ def config_fields() -> dict[FieldId, Any]:
     """
     base = Config()
     fields: dict[FieldId, Any] = {("", "whitelist"): []}
-    for section in ("claude", "limits", "chat", "memory", "pricing", "room", "avatar"):
+    for section in ("claude", "limits", "chat", "memory", "pricing", "room", "avatar", "updates"):
         values = getattr(base, section)
         for f in dataclasses.fields(values):
             fields[(section, f.name)] = _plain(getattr(values, f.name))

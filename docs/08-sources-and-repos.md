@@ -75,6 +75,10 @@ Also from your own G-Earth folder (`~/Library/Application Support/G-Earth/` on m
 - **Model:** `claude-haiku-5-5`. Thinking is adaptive (on by default); no `temperature` or prefill.
 - **Web search:** `web_search_20250305` (the version for Haiku), with `pause_turn` handling.
 
+## GitHub
+
+- **REST API, "Get the latest release"** (`GET /repos/{owner}/{repo}/releases/latest`): `tag_name`, `html_url`, `published_at`. Works without a login (60 requests an hour per IP); the bot asks once a day.
+
 ## Other
 
 - **wikiHow, "Good Roasts":** techniques for the `/roast` prompt (pasted into the chat, since it couldn't be fetched).

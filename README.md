@@ -28,7 +28,7 @@ Replies come back the way the question was asked: chat gets chat, shout gets sho
 - **Anti-idle:** your avatar never goes to sleep (Zzz).
 - **Staying in your room:** after a bot restart, or if you end up on the hotel view, it takes you back to your last room. See [Staying in your room](#staying-in-your-room).
 
-**Settings window:** press ▶ next to Bobba Buddy in G-Earth to change any setting in a Habbo-style window, switch the bot on or off, and watch what it's doing in a live log. See [Settings window](#settings-window).
+**Settings window:** press ▶ next to Bobba Buddy in G-Earth to change any setting in a Habbo-style window, switch the bot on or off, watch what it's doing in a live log, and update to a new version with one click. See [Settings window](#settings-window).
 
 > ⚠️ **Running this on an official hotel breaks Habbo's [Terms of Service](https://www.habbo.com/playing-habbo/terms-of-service) and can get the account banned.**
 > - **Section 5 (Code of Conduct)** forbids automation software, bots, scripts and unauthorized third-party tools (G-Earth and its extensions count) meant to gain an unfair advantage or interfere with the Service.
@@ -135,6 +135,7 @@ Press **▶** next to Bobba Buddy in G-Earth's Extensions tab. A Habbo-style win
 - **Save** checks the settings and writes `config.toml`, keeping your comments, and the bot applies them straight away. A bad value turns its setting red and nothing is written. **Revert** puts back what's saved.
 - **Extension Logs** shows the bot's log live, like a terminal, for debugging: coloured levels, level and text filters, Auto-scroll (on by default; scroll up to pause, back to the bottom to follow again), a Debug switch for step-by-step detail, and Copy, Clear and Open log file. See [Extension Logs](docs/09-settings-window.md#extension-logs).
 - **About** has the version and the GitHub and docs links.
+- **Updates:** when a new version is out, a banner under the header offers **Update now** and **View release**. See [Updating](#updating).
 - Save and Revert appear only on the pages with settings.
 
 <table>
@@ -159,6 +160,28 @@ uv run python -m bobba_buddy.settings --page "Extension Logs" --demo-logs
 
 **Linux:** the window needs Tkinter (`sudo apt install python3-tk` on Debian and Ubuntu). Without it the bot runs normally and says so in the G-Earth console. The python.org installers and uv's own Python builds already include it.
 
+### Updating
+
+The bot asks GitHub once a day whether there's a newer release (turn that off under **Advanced → Update checks**, or `[updates] check = false`). When there is, the settings window shows a banner and the G-Earth console says so once.
+
+**Update now** does the update for you: it runs `git pull`, `uv sync` (only if the dependencies changed) and the G-Earth installer. Then **restart G-Earth** to start the new version; the bot keeps running the old one until then. Your `config.toml`, `.env`, logs and state are never touched.
+
+It only updates automatically when that's safe: the project is a git checkout on `main` with no edited files, and the new version isn't a major one (which could change `config.toml`). Otherwise it tells you why and shows the steps to do by hand:
+
+```bash
+git pull
+```
+
+```bash
+uv sync
+```
+
+```bash
+uv run python scripts/install_gearth.py
+```
+
+Then restart G-Earth.
+
 ## Configuration (`config.toml`)
 
 The [settings window](#settings-window) edits this file for you. Changes are picked up within about 2 seconds. If an edit is invalid, the error shows in the G-Earth console and the previous settings stay active. Every option is commented in `config.example.toml`. The ones you'll most likely change:
@@ -172,6 +195,7 @@ The [settings window](#settings-window) edits this file for you. Changes are pic
 - **`[claude] model`:** `claude-haiku-5-5` by default.
 - **`[avatar]`:** copying, autopilot weights, anti-idle, and the Habbo Club switches `hc_dances` / `hc_expressions`. See [Avatar behaviour](#avatar-behaviour).
 - **`[room]`:** `rejoin_on_start` and `return_on_exit`. See [Staying in your room](#staying-in-your-room).
+- **`[updates]`:** `check` (on by default) asks GitHub once a day for a newer release. See [Updating](#updating).
 
 If Habbo doesn't send chat that starts with `/`, change the prefixes to `!q`, `!roast`, etc.
 
@@ -274,7 +298,7 @@ uv run --no-project --with pymupdf python scripts/make_icons.py   # only when th
 
 Logs go to `logs/bobba-buddy.log` in the project folder (rotating, about 6 MB kept). The settings window's Extension Logs page shows the same lines live.
 
-**Versioning.** Current version: **1.4.1**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.5.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 
@@ -292,4 +316,5 @@ Logs go to `logs/bobba-buddy.log` in the project folder (rotating, about 6 MB ke
 | A file appears in `logs/bad-packets/` | Habbo changed a packet layout. The bot keeps working around it; share the file to get the parser updated. |
 | G-Earth runs but no window opens (even after restarting) | A hidden `.DS_Store` file in G-Earth's `Extensions` folder. Finder creates it when you open the folder, and G-Earth crashes trying to start it as an extension. Run `uv run python scripts/install_gearth.py` again: it removes the file and, on macOS, leaves an empty `.DS_Store` folder in its place so Finder can't recreate it. Or delete it by hand: `rm "$HOME/Library/Application Support/G-Earth/Extensions/.DS_Store"`. See [Bugs and fixes](docs/07-bugs-and-fixes.md#22-g-earth-runs-but-its-window-never-opens). |
 | Nothing happens at all | Check that the name is in `whitelist` and that the bot is ON (the switch in the settings window, ▶ in G-Earth). Then open **Extension Logs** in the settings window and turn on **Debug** to see each step a command goes through. |
+| **Update now** says it couldn't update | It explains why: local edits, not on `main`, `git` or `uv` not found, or a major version. Update by hand with the steps in [Updating](#updating). Each step's output is in **Extension Logs**. |
 | I want to see what the bot is doing | Settings window → **Extension Logs**: the live log, with filters. The same lines are in `logs/bobba-buddy.log` in the project folder. |

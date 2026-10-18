@@ -31,6 +31,7 @@ Then open `docs/sphinx/_build/html/index.html`. The published copy is at https:/
   - change how the bot talks → [Codebase guide § Prompts](02-codebase-guide.md#prompts-and-tone)
   - send a packet by hand → [Reading packets § G-Earth expressions](05-reading-packets.md#g-earth-packet-expressions)
   - add a new avatar action → [Codebase guide § Adding an avatar action](02-codebase-guide.md#adding-an-avatar-action)
+  - update to the latest version → [Settings window § Updates](09-settings-window.md#updates)
   - see what the bot is doing right now → [Settings window § Extension Logs](09-settings-window.md#extension-logs)
 - **Something broke:**
   - a file appeared in `logs/bad-packets/` → [Reading packets § Decoding a bad-packet dump](05-reading-packets.md#decoding-a-bad-packet-dump)
@@ -49,6 +50,7 @@ Each version below has a git tag (`v1.2.2` and so on), except 1.1.1 and 1.1.2: t
 
 | Version | Contents |
 |---|---|
+| `v1.5.0` | **Updates:** the bot asks GitHub once a day for a newer release (`[updates] check`, on by default; also under Advanced). A banner under the settings window's header offers **Update now** (runs `git pull`, `uv sync` if needed and the installer, then asks you to restart G-Earth), **View release** and ✕; the G-Earth console says so once per version. It only updates automatically on a clean `main` checkout and never across a major version; otherwise it explains why and shows the manual steps. About gets an Updates box with Check now. New modules `updates.py`, `updater.py`, `settings/updateview.py`. |
 | `v1.4.1` | Fix (macOS): reopening the settings window showed Python's icon in the Dock instead of the Bobba Buddy logo. The logo is now set again each time the window opens. |
 | `v1.4.0` | **Extension Logs** page in the settings window: the bot's log live in a terminal view (last 2,000 lines kept in memory) with coloured levels, level chips, a text filter, Auto-scroll (on by default, pauses when you scroll up), a Debug switch (DEBUG logging until restart), Copy, Clear and Open log file. New DEBUG lines trace each command through queueing, the Claude call, the reply and each bubble sent. Save and Revert are hidden on About and Extension Logs; the log page's status bar wraps to two rows on a narrow window. The window shows as "Bobba Buddy" instead of "Python" in the macOS menu bar and Dock, and with the logo on the Windows taskbar. Fix: closing the window could leave it half-open when another widget had a timer pending. |
 | `v1.3.3` | Fix: G-Earth's window stopped opening again because Finder recreated `.DS_Store` in the `Extensions` folder. On macOS `install_gearth.py` now leaves an empty `.DS_Store` folder there, which Finder can't overwrite and G-Earth skips. |

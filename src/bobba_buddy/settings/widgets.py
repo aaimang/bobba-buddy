@@ -437,7 +437,7 @@ class ForumButton(tk.Frame):
         self._base, self._hover, self._down, fg = self.COLORS[color]
         self._label = tk.Label(
             self,
-            text=f" {text}" if icon else text,  # Tk has no gap option for compound
+            text=f" {text}" if icon and text else text,  # Tk has no gap option for compound
             image=icon or "",
             compound="left",
             font=th.font(11 if small else 13, bold=True),
@@ -466,6 +466,15 @@ class ForumButton(tk.Frame):
     def invoke(self) -> None:
         """Run the command, as a click would."""
         self._command()
+
+    def set_text(self, text: str) -> None:
+        """Change the label, keeping the icon's gap.
+
+        Args:
+            text: The new text.
+        """
+        has_icon = bool(str(self._label.cget("image")))
+        self._label.configure(text=f" {text}" if has_icon and text else text)
 
     def set_color(self, color: str) -> None:
         """Change the colour, e.g. yellow while a toggle is on.

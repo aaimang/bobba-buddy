@@ -37,6 +37,7 @@ from .theme import (
     load_png,
     name_app,
 )
+from .updateview import UpdateUI
 from .widgets import (
     Box,
     Chips,
@@ -165,6 +166,7 @@ class SettingsWindow:
         )
         root.protocol("WM_DELETE_WINDOW", self.close)
         self.refresh_status()
+        self._updates.refresh()
         if load_error:
             self._message(f"Couldn't read config.toml: {load_error}", t.RED)
         root.after(1000, self._tick)
@@ -206,7 +208,7 @@ class SettingsWindow:
     def _build_body(self) -> None:
         """Sidebar on the left, scrolling page and Save/Revert bar on the right."""
         th = self.th
-        body = tk.Frame(self.root, bg=t.PANEL)
+        self._body = body = tk.Frame(self.root, bg=t.PANEL)
         body.pack(fill="both", expand=True)
         names = [p.name for p in PAGES] + [LOGS, ABOUT]
         icons = {name: th.icon(PAGE_ICONS.get(name, ""), "nav") for name in names}
@@ -236,6 +238,14 @@ class SettingsWindow:
         self._scroll = ScrollArea(content, t.PANEL)
         self._scroll.pack(fill="both", expand=True, padx=(th.px(10), 0), pady=(th.px(10), 0))
         self._logs = LogView(content, th, logbuffer.current())
+        self._updates = UpdateUI(
+            self.root,
+            th,
+            self._bridge,
+            self._path.parent,
+            show_about=lambda: self.show_page(ABOUT),
+        )
+        self._updates.build_banner(before=body)
 
     def _build_footer(self) -> None:
         """Bottom strip: version, tagline and the GitHub link."""
@@ -315,6 +325,7 @@ class SettingsWindow:
         th = self.th
         frame = tk.Frame(self._scroll.inner, bg=t.PANEL)
         title = "About Bobba Buddy"
+        self._updates.build_about(frame)
         box = Box(frame, th, title, icon=th.icon(BOX_ICONS[title]))
         box.pack(fill="x", padx=(0, th.px(10)))
         inner = tk.Frame(box.body, bg=t.WHITE, padx=th.px(14), pady=th.px(14))
@@ -521,8 +532,9 @@ class SettingsWindow:
         self._status.configure(text=" · ".join(parts), fg="#5a4500")
 
     def _tick(self) -> None:
-        """Every second: refresh the header, and pick up outside edits to the file."""
+        """Every second: refresh the header and update banner, and pick up file edits."""
         self.refresh_status()
+        self._updates.refresh()
         mtime = self._stat()
         if mtime is not None and mtime != self._mtime:
             self._mtime = mtime

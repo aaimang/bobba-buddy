@@ -28,6 +28,8 @@ bobba-buddy/
 │  ├─ budget.py              daily spend cap and cost estimate
 │  ├─ memory.py              per-user /q history
 │  ├─ config.py              typed config, validation, hot reload
+│  ├─ updates.py             UpdateChecker: asks GitHub for the latest release, once a day
+│  ├─ updater.py             Updater: one-click update (git pull, uv sync, installer)
 │  ├─ guard.py               exception guard + bad-packet reporting
 │  ├─ gpython.py             single import point for g_python (silences its warnings)
 │  ├─ assets/logo.png        the logo, for the settings window (same file as the docs logo)
@@ -40,6 +42,7 @@ bobba-buddy/
 │     ├─ configfile.py       read/write config.toml, keeping comments (tomlkit)
 │     ├─ logbuffer.py        keeps the latest log lines in memory (LogBuffer handler)
 │     ├─ logview.py          the Extension Logs page (LogView terminal)
+│     ├─ updateview.py       the update banner and About's Updates box
 │     ├─ theme.py            colours, fonts, DPI and bring-to-front helpers
 │     └─ __main__.py         preview without G-Earth: python -m bobba_buddy.settings
 ├─ scripts/
@@ -49,7 +52,7 @@ bobba-buddy/
 │  └─ make_icons.py          renders the settings window's Tabler icons to PNG (needs PyMuPDF)
 ├─ tests/                    offline pytest suite (fake G-Earth, fake Claude)
 ├─ logs/                     bobba-buddy.log (rotating), bad-packets/ (git-ignored)
-└─ state/                    budget.json, last_room.json (git-ignored)
+└─ state/                    budget.json, last_room.json, update_check.json (git-ignored)
 ```
 
 ## Modules
@@ -155,6 +158,7 @@ Every module, class and function has a **Google-style** docstring (`Args:`, `Ret
 | `test_protocol.py` | Packet round trips, live `Users` captures, tolerant parsing |
 | `test_textfmt.py`, `test_commands_prompts.py`, `test_config.py`, `test_state.py`, `test_llm.py`, `test_guard.py` | The individual modules |
 | `test_settings_*.py` | The settings window: saving with comments kept, every config key shown and every icon present, the main-thread host, the Extension Logs buffer and page, and the window itself (skipped without a display) |
+| `test_updates.py`, `test_updater.py` | Update checks with GitHub faked (versions, once-a-day timing, state, announcing once) and the one-click updater with git, uv and the installer faked (safety checks, step order, failures) |
 | `test_install_gearth.py` | The installer on macOS, Windows and Linux: finding a running G-Earth, the folder search, `--gearth-dir`, virtualenv paths |
 
 Real packets captured from the live client are used as fixtures (`LIVE_USER_UPDATE`, `LIVE_BOT_ENTRY`, `LIVE_PLAYER_PACKET`). When the client changes again, add the new capture as a test first.

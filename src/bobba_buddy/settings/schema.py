@@ -453,6 +453,18 @@ PAGES: tuple[Page, ...] = (
                 note="Used for the daily budget.",
             ),
             Box(
+                "Update checks",
+                (
+                    Field(
+                        "updates",
+                        "check",
+                        "Check for updates once a day",
+                        "toggle",
+                        "Asks GitHub for the latest release (sends your IP to GitHub)",
+                    ),
+                ),
+            ),
+            Box(
                 "Room loading",
                 (
                     Field(
@@ -510,6 +522,8 @@ BOX_ICONS: dict[str, str] = {
     "Packet safety": "shield-check",
     "Pricing (USD)": "receipt",
     "Room loading": "home",
+    "Update checks": "refresh",
+    "Updates": "refresh",
     "Extension Logs": "terminal",
     "About Bobba Buddy": "info-circle",
 }

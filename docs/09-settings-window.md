@@ -28,9 +28,9 @@ Closing the window doesn't stop the bot. It keeps running in G-Earth.
 | **Room** | Rejoining the last room after a restart, and going back after landing on the hotel view. |
 | **Claude** | Model, thinking effort, max tokens, timeout, retries, searches per `/q`, and `/q` memory. |
 | **Budget** | Daily budget and question length; the number of Claude calls at once and the queue size (these two apply after the extension restarts). |
-| **Advanced** | Chat timing and bubble style, packet safety (`require_seen_packets`), the prices used for the budget, and the room reload packet. |
+| **Advanced** | Chat timing and bubble style, packet safety (`require_seen_packets`), the prices used for the budget, the room reload packet, and update checks. |
 | **Extension Logs** | The bot's log, live, in a terminal view (since 1.4.0). See [Extension Logs](#extension-logs) below. |
-| **About** | The logo, version, GitHub and docs links, and the fan-project disclaimer. |
+| **About** | The **Updates** box (status, Check now, Update now) and the logo, version, GitHub and docs links, and the fan-project disclaimer. |
 
 ![Whitelist page](images/settings-whitelist.png)
 
@@ -80,6 +80,26 @@ Each line shows the time (to the millisecond), the level, the thread and the par
 The status line also counts the lines shown. On a narrow window it moves above the buttons, so nothing is cut off.
 
 To try it without G-Earth, with sample lines: `uv run python -m bobba_buddy.settings --page "Extension Logs" --demo-logs`.
+
+## Updates
+
+Since 1.5.0 the bot asks GitHub once a day whether there's a newer release. When there is, a light-blue banner appears under the header on every page, and the G-Earth console says so once.
+
+![The update banner under the header, and the About page's Updates box with Update now, Check now and the manual steps](images/settings-update.png)
+
+| Banner button | What it does |
+|---|---|
+| **Update now** | Asks first, then runs `git pull`, `uv sync` (only if the dependencies changed) and the G-Earth installer. The banner shows each step; every command's output also goes to Extension Logs. |
+| **View release** | Opens the release notes on GitHub. |
+| **✕** | Hides the banner until a newer version comes out. |
+
+When the update is done, the banner turns green and asks you to **restart G-Earth**: the bot keeps running the old version until G-Earth starts it again. It can't restart itself, because G-Earth gives each extension a one-time login when it launches it.
+
+**Update now** only runs when it's safe. The project must be a git checkout on `main` that tracks GitHub, with no edited files (your `config.toml`, `.env`, `logs/` and `state/` don't count; git ignores them), and the update mustn't be a new major version, which could change `config.toml`. Otherwise the banner turns red, says why, and **How to update** opens the About page with the steps to run by hand.
+
+The **Updates** box on the About page shows the same status, when GitHub was last asked, a **Check now** button, and the manual steps when an update is available. To stop the daily check, turn off **Advanced → Update checks** (it sends your IP address to GitHub).
+
+To see the banner without G-Earth: `uv run python -m bobba_buddy.settings --demo-update 9.9.0`.
 
 ## Saving
 

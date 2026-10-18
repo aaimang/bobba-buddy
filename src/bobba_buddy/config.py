@@ -219,6 +219,18 @@ class AvatarConfig:
 
 
 @dataclass(frozen=True)
+class UpdatesConfig:
+    """``[updates]``: checking GitHub for a newer release.
+
+    Attributes:
+        check: Ask GitHub for the latest release once a day (sends your IP address
+            to GitHub). The settings window shows a banner when there's a newer one.
+    """
+
+    check: bool = True
+
+
+@dataclass(frozen=True)
 class CommandConfig:
     """``[commands.<name>]``: settings for one chat command.
 
@@ -265,6 +277,7 @@ class Config:
         pricing: ``[pricing]`` settings.
         room: ``[room]`` settings.
         avatar: ``[avatar]`` settings.
+        updates: ``[updates]`` settings.
         commands: ``[commands.<name>]`` settings, keyed by internal command name.
     """
 
@@ -276,6 +289,7 @@ class Config:
     pricing: PricingConfig = field(default_factory=PricingConfig)
     room: RoomConfig = field(default_factory=RoomConfig)
     avatar: AvatarConfig = field(default_factory=AvatarConfig)
+    updates: UpdatesConfig = field(default_factory=UpdatesConfig)
     commands: Mapping[str, CommandConfig] = field(default_factory=lambda: dict(COMMAND_DEFAULTS))
 
 
@@ -341,6 +355,7 @@ def parse_config(data: dict[str, Any]) -> Config:
         "pricing",
         "room",
         "avatar",
+        "updates",
         "commands",
     }
     unknown = set(data) - allowed
@@ -374,6 +389,7 @@ def parse_config(data: dict[str, Any]) -> Config:
         pricing=_build(PricingConfig, data.get("pricing", {}), "pricing"),
         room=_build(RoomConfig, data.get("room", {}), "room"),
         avatar=_build(AvatarConfig, data.get("avatar", {}), "avatar"),
+        updates=_build(UpdatesConfig, data.get("updates", {}), "updates"),
         commands=commands,
     )
     _validate(config)

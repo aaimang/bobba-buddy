@@ -86,6 +86,14 @@ def test_icon_pngs_exist_in_both_sizes():
     wanted += [("brand-github", "link"), ("brand-github", "white")]
     tools = ("filter", "search", "arrow-bar-to-down", "bug", "copy", "trash", "file-text")
     wanted += [(name, "tool") for name in tools]  # Extension Logs toolbar
+    wanted += [("download", "tool"), ("clipboard-copy", "tool"), ("x", "tool")]
+    wanted += [("refresh", "tool"), ("external-link", "white")]  # update banner buttons
+    wanted += [
+        ("cloud-download", "info"),
+        ("refresh", "warn"),
+        ("circle-check", "ok"),
+        ("alert-triangle", "bad"),
+    ]  # update banner states
     for name, variant in wanted:
         assert name in make_icons.ICONS[variant], (name, variant)
         size = make_icons.VARIANTS[variant][1]

@@ -192,3 +192,98 @@ def test_name_app_is_safe_everywhere(monkeypatch):
     for platform in ("linux", "win32", "darwin"):
         monkeypatch.setattr(theme.sys, "platform", platform)
         theme.name_app("Bobba Buddy")  # wrong-OS calls fail inside and are ignored
+
+
+# --- update banner and About's Updates box --------------------------------------------
+
+
+@pytest.fixture
+def update_to():
+    """Install a checker whose GitHub says the given version is latest."""
+    from bobba_buddy import updates
+
+    def install(version):
+        updates.uninstall()
+        release = updates.Release(version, f"v{version}", "https://example.test/r", "")
+        checker = updates.install(None, current="1.4.1", fetch=lambda: release)
+        checker.check_now()
+        return checker
+
+    yield install
+    updates.uninstall()
+
+
+class FakeUpdater:
+    """Finishes at once with the given result."""
+
+    result = "done"
+
+    def __init__(self, project_dir, target, current):
+        """Remember the target."""
+        self.target, self.current = target, current
+        self.state, self.step, self.message = "idle", "", ""
+
+    def start(self):
+        self.state = self.result
+        self.message = "Updated." if self.result == "done" else "Couldn't update: nope."
+
+
+def test_no_banner_without_an_update(root, config, update_to):
+    update_to("1.4.1")
+    w = SettingsWindow(root, FakeBridge(), config, EXAMPLE)
+    assert w._updates.state == "" and not w._updates.banner.winfo_manager()
+    w.show_page(ABOUT)
+    assert "latest version" in w._updates._about_status.cget("text")
+
+
+def test_banner_when_an_update_exists(root, config, update_to, monkeypatch):
+    update_to("1.5.0")
+    w = SettingsWindow(root, FakeBridge(), config, EXAMPLE)
+    ui = w._updates
+    assert ui.state == "available" and "1.4.1 → 1.5.0" in ui._text.cget("text")
+    opened = []
+    monkeypatch.setattr(window_mod.webbrowser, "open", opened.append)
+    monkeypatch.setattr("bobba_buddy.settings.updateview.webbrowser.open", opened.append)
+    ui.view_release()
+    assert opened == ["https://example.test/r"]
+    assert "1.5.0 is available" in ui._about_status.cget("text")
+    ui.close()  # ✕ hides it until a newer version
+    assert ui.state == ""
+
+
+def test_update_now_asks_then_shows_the_result(root, config, update_to):
+    update_to("1.5.0")
+    bridge = FakeBridge()
+    notices = []
+    bridge.notice = lambda text, color="black": notices.append((text, color))
+    w = SettingsWindow(root, bridge, config, EXAMPLE)
+    ui = w._updates
+    ui._make_updater = FakeUpdater
+    ui._confirm = lambda *a: False
+    ui.update_now()
+    assert ui.updater is None  # said no
+    ui._confirm = lambda *a: True
+    ui.update_now()
+    ui.refresh()
+    assert ui.state == "done" and notices == [("Updated.", "green")]
+    FakeUpdater.result = "failed"
+    try:
+        ui.updater = None
+        ui.update_now()
+        ui.refresh()
+        assert ui.state == "failed"
+        ui._b_howto.invoke()
+        assert w.page == ABOUT
+    finally:
+        FakeUpdater.result = "done"
+
+
+def test_released_and_checked_texts():
+    from bobba_buddy.settings.updateview import checked_text, released_ago
+
+    now = 1_800_000_000.0
+    assert released_ago("2027-01-15T08:00:00Z", now=now) == "released today"
+    assert released_ago("2027-01-12T08:00:00Z", now=now) == "released 3 days ago"
+    assert released_ago("") == ""
+    assert checked_text(0) == "Not checked yet"
+    assert checked_text(now - 60, now=now).startswith("Checked today at ")

@@ -8,6 +8,7 @@ Usage::
     uv run python -m bobba_buddy.settings --project-dir .
     uv run python -m bobba_buddy.settings --page Avatar
     uv run python -m bobba_buddy.settings --page "Extension Logs" --demo-logs
+    uv run python -m bobba_buddy.settings --demo-update 9.9.0   # show the update banner
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ import queue
 import signal
 import sys
 import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -108,6 +110,29 @@ def demo_logs(stop: threading.Event) -> None:
         emit("buddy-avatar", "avatar", logging.INFO, f"avatar autopilot: LookTo (demo {tick})")
 
 
+def install_checker(demo_version: str | None) -> None:
+    """Set up update checks for the preview.
+
+    With ``demo_version``, GitHub is faked to return that version (already checked);
+    otherwise a real checker that only asks GitHub when "Check now" is pressed.
+
+    Args:
+        demo_version: The fake latest version, or ``None``.
+    """
+    from .. import updates
+
+    if demo_version is None:
+        updates.install(None)  # asks GitHub only when "Check now" is pressed
+        return
+    release = updates.Release(
+        version=demo_version.lstrip("vV"),
+        tag=f"v{demo_version.lstrip('vV')}",
+        url=f"https://github.com/{updates.REPO}/releases",
+        published_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - 2 * 86400)),
+    )
+    updates.install(None, fetch=lambda: release).check_now()
+
+
 def main(argv: list[str] | None = None) -> int:
     """Open the window and wait for it to close.
 
@@ -124,6 +149,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--demo-logs", action="store_true", help="fill Extension Logs with sample lines"
     )
+    parser.add_argument(
+        "--demo-update",
+        metavar="VERSION",
+        default=None,
+        help="pretend GitHub's latest release is VERSION (shows the update banner)",
+    )
     args = parser.parse_args(sys.argv[1:] if argv is None else argv)
     project_dir = (args.project_dir or Path.cwd()).expanduser().resolve()
     config_path = (args.config or project_dir / "config.toml").expanduser().resolve()
@@ -135,6 +166,7 @@ def main(argv: list[str] | None = None) -> int:
 
     logbuffer.install(project_dir / "logs" / "bobba-buddy.log")
     logging.getLogger("bobba_buddy.settings").info("settings preview started")
+    install_checker(args.demo_update)
     if args.demo_logs:
         threading.Thread(target=demo_logs, args=(stop,), name="demo", daemon=True).start()
 

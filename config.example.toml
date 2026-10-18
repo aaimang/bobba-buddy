@@ -81,6 +81,11 @@ owner_pause_s = 60            # autopilot waits this long after you move/act you
 action_gap_s = 1.5            # minimum seconds between any two avatar actions
 require_seen_packets = false  # false: always act, G-Earth decides (see README: packet safety)
 
+# Ask GitHub once a day whether a newer release exists (sends your IP address to
+# GitHub). The settings window then shows a banner with an "Update now" button.
+[updates]
+check = true
+
 [commands.q]
 enabled = true
 prefix = "/q"

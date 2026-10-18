@@ -92,6 +92,8 @@ G-Python runs **every packet callback on a single thread**, and G-Earth **holds 
 | `buddy-outbox` | `Outbox.start()` | Paced chat bubbles |
 | `buddy-avatar` | `AvatarController.start()` | Copies, autopilot, wake-ups |
 | timers | `threading.Timer` | Room rejoin and return |
+| `buddy-update` | `__main__.main()` | Asks GitHub for the latest release at most once a day (`updates.UpdateChecker`) |
+| `buddy-updater` | the settings window's **Update now** | Runs `git pull`, `uv sync` and the installer (`updater.Updater`), then exits |
 
 Shared state (`RoomState`, `AccessControl`, `ConversationMemory`, `Budget`) is protected by locks.
 
@@ -122,5 +124,6 @@ G-Earth's ▶ button sends `double_click`. G-Python raises it on a thread of its
 - **Name and icon:** before the first `tk.Tk()`, `theme.name_app()` sets `CFBundleName` in the running Python's in-memory bundle info on macOS (menu bar and Dock read it at app start-up), and an AppUserModelID on Windows (so the taskbar shows the window's logo, not `python.exe`'s).
 - **To the front:** the bot is a background process, so on macOS the window activates the app through the Objective-C runtime and floats on top until it's focused.
 - **No Tkinter** (some Linux installs) or no display: the bot keeps running and prints a notice in the G-Earth console.
+- **Updates:** `updates.UpdateChecker` keeps the latest release in `state/update_check.json`; the window reads it every second and never waits on the network. **Update now** runs `updater.Updater` on its own thread while the bot keeps running the old code in memory; the new version starts when G-Earth starts the extension again.
 - **Extension Logs:** at startup `logbuffer.install()` adds a logging handler that keeps the last 2,000 records in memory. `emit()` only appends under a lock, so logging from the packet thread stays cheap. The open window polls it every 200 ms on the Tk thread. The Debug button sets the root logger to DEBUG until the bot restarts.
 

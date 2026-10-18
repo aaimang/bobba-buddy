@@ -28,6 +28,7 @@ from pathlib import Path
 import anthropic
 from dotenv import load_dotenv
 
+from . import updates
 from .bot import EXTENSION_INFO, EXTENSION_SETTINGS, BobbaBuddy
 from .budget import Budget
 from .config import ConfigError, ConfigStore
@@ -201,6 +202,9 @@ def run_session(
         return False
 
     bot.start()
+    checker = updates.current()
+    if checker is not None:
+        checker.announce(bot.notice)  # a version found while disconnected
     bot.notice(
         f"Bobba Buddy {EXTENSION_INFO['version']} loaded (model {store.get().claude.model})",
         "green",
@@ -217,6 +221,24 @@ def run_session(
                 log.debug("ext.stop failed", exc_info=True)
     log.info("G-Earth connection closed")
     return True
+
+
+def check_for_updates(
+    checker: updates.UpdateChecker, settings: SettingsHost, stop: threading.Event
+) -> None:
+    """Background thread: ask GitHub at most once a day, announce new versions.
+
+    Args:
+        checker: The update checker.
+        settings: The settings host; its bridge reaches the connected bot, if any.
+        stop: Set to end the thread.
+    """
+    while not stop.is_set():
+        checker.maybe_check()
+        bridge = settings.bridge
+        if bridge is not None:
+            checker.announce(bridge.notice)
+        stop.wait(3600)  # look again hourly; maybe_check() only asks GitHub daily
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -257,6 +279,13 @@ def main(argv: list[str] | None = None) -> int:
 
     stop = threading.Event()
     settings = SettingsHost(config_path, project_dir / "config.example.toml")
+    checker = updates.install(
+        project_dir / "state" / "update_check.json",
+        enabled=lambda: store.get().updates.check,
+    )
+    threading.Thread(
+        target=check_for_updates, args=(checker, settings, stop), name="buddy-update", daemon=True
+    ).start()
 
     def handle_signal(signum, _frame) -> None:
         """Stop on SIGINT or SIGTERM."""

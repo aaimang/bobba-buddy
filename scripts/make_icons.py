@@ -31,6 +31,11 @@ VARIANTS = {
     "link": ("#185c75", 14),  # footer link
     "white": ("#ffffff", 14),  # on the blue GitHub button
     "tool": ("#2a3a42", 14),  # toolbar buttons and labels on the Extension Logs page
+    # The update banner, one colour per state:
+    "info": ("#185c75", 18),  # update available
+    "warn": ("#5a4500", 18),  # updating
+    "ok": ("#27500a", 18),  # updated
+    "bad": ("#8b1a1a", 18),  # couldn't update
 }
 
 PAGE_ICONS = (
@@ -67,13 +72,29 @@ BOX_ICONS = (
     "info-circle",
     "terminal",
 )
-TOOL_ICONS = ("filter", "search", "arrow-bar-to-down", "bug", "copy", "trash", "file-text")
+TOOL_ICONS = (
+    "filter",
+    "search",
+    "arrow-bar-to-down",
+    "bug",
+    "copy",
+    "trash",
+    "file-text",
+    "download",
+    "clipboard-copy",
+    "x",
+    "refresh",
+)
 ICONS = {
     "nav": (*PAGE_ICONS, "info-circle"),
     "box": BOX_ICONS,
     "link": ("brand-github",),
-    "white": ("brand-github",),
+    "white": ("brand-github", "external-link"),
     "tool": TOOL_ICONS,
+    "info": ("cloud-download",),
+    "warn": ("refresh",),
+    "ok": ("circle-check",),
+    "bad": ("alert-triangle",),
 }
 
 

@@ -21,6 +21,8 @@ Generated from the Google-style docstrings in ``src/bobba_buddy``.
    bobba_buddy.budget
    bobba_buddy.memory
    bobba_buddy.config
+   bobba_buddy.updates
+   bobba_buddy.updater
    bobba_buddy.guard
    bobba_buddy.gpython
    bobba_buddy.settings
@@ -31,5 +33,6 @@ Generated from the Google-style docstrings in ``src/bobba_buddy``.
    bobba_buddy.settings.configfile
    bobba_buddy.settings.logbuffer
    bobba_buddy.settings.logview
+   bobba_buddy.settings.updateview
    bobba_buddy.settings.theme
    bobba_buddy.settings.__main__

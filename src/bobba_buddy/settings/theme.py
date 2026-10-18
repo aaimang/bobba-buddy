@@ -26,8 +26,8 @@ Attributes:
     WINDOWS_APP_ID (str): AppUserModelID, so Windows shows the logo on the taskbar.
     ICON_DIR (Path): The Tabler icon PNGs (made by ``scripts/make_icons.py``).
     ICON_SIZES (dict[str, int]): Icon size in design pixels per variant: ``nav``
-        (sidebar), ``box`` (box headers), ``link`` (footer), ``white`` (blue button) and
-        ``tool`` (Extension Logs toolbar).
+        (sidebar), ``box`` (box headers), ``link`` (footer), ``white`` (blue button),
+        ``tool`` (toolbar buttons) and ``info``/``warn``/``ok``/``bad`` (update banner).
 """
 
 from __future__ import annotations
@@ -63,7 +63,17 @@ DOCS_URL = "https://aaimang.github.io/bobba-buddy/"
 APP_NAME = "Bobba Buddy"
 WINDOWS_APP_ID = "aaimang.BobbaBuddy.Settings"
 ICON_DIR = Path(__file__).resolve().parent.parent / "assets" / "icons"
-ICON_SIZES = {"nav": 18, "box": 16, "link": 14, "white": 14, "tool": 14}
+ICON_SIZES = {
+    "nav": 18,
+    "box": 16,
+    "link": 14,
+    "white": 14,
+    "tool": 14,
+    "info": 18,
+    "warn": 18,
+    "ok": 18,
+    "bad": 18,
+}
 
 log = logging.getLogger(__name__)
 
