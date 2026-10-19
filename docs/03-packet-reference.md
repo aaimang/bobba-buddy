@@ -66,7 +66,7 @@ i id, s name, s motto, s figure, i roomIndex, i x, i y, s z, i direction, i type
 - **`UserUpdate`:** an int after the two directions, seen as 0.
 - **`Users` players:** an int after `isModerator`, seen as -1.
 
-The parsers try the live layout first and fall back to the documented one. See [Bugs and fixes](07-bugs-and-fixes.md).
+The parsers try the live layout first and fall back to the documented one. For players, `groupName` (their favourite group) and `achievementScore` are kept for `/roast`, but only when the whole tail lined up; checked against a live capture (AIR MAC63, a real group name and a score of 8233). See [Bugs and fixes](07-bugs-and-fixes.md).
 
 ### `UserUpdate` status string
 

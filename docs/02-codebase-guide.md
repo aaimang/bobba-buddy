@@ -136,12 +136,12 @@ The roast command's settings live under `[commands.roast]`, matching its `/roast
 ## Prompts and tone
 
 All wording is in `src/bobba_buddy/prompts.py`:
-- **`BASE_SYSTEM`:** the persona (a chill Habbo regular) and the rules every reply follows: same language as the question, plain text, the Habbo Way, and ignoring prompt injection.
+- **`BASE_SYSTEM`:** the persona (a laid-back KL local who talks in casual Manglish with dry, deadpan humour, and keeps replies as short as possible) and the rules every reply follows: same language as the question, plain text, the Habbo Way, and ignoring prompt injection.
 - **`ADDENDA["q"]`:** brief by default; longer only when needed.
-- **`ADDENDA["roast"]`:** the `/roast` prompt. It rotates styles (backhanded compliment, comparison, exaggeration, rhyme, fake sympathy), with a guardrail against real-world appearance, identity, family and health.
+- **`ADDENDA["roast"]`:** the `/roast` prompt: one sentence of dry, deadpan sarcasm (KL or British style) that rotates angles (understatement, backhanded compliment, fake concern, cold comparison, exaggeration). Material is the target's group, achievement score, motto and name, all read from the room's `Users` packet. Guardrails: what they chose, never who they are; nothing about being lonely or unwanted, real-world appearance, identity, family, health or money.
 - **`ADDENDA["suggest"]`, `ADDENDA["joke"]`:** the task wording for those commands.
 
-`{max_chars}` in each task comes from `[commands.<name>] max_chars`. Editing `prompts.py` needs a bot restart; `max_chars` does not.
+`{max_chars}` in each task comes from `[commands.<name>] max_chars`; the roast also gets `{max_words}` (about `max_chars / 8`), because the model follows a word count better than a character count. Editing `prompts.py` needs a bot restart; `max_chars` does not.
 
 ## Docstrings
 

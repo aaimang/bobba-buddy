@@ -117,6 +117,19 @@ class TestRoom:
         ]
         assert users[0].motto == "my motto"
 
+    def test_player_group_and_achievement_score(self):
+        users, problem = parse_users(
+            users_packet(player(10, "Ali", 0, group="Cafe Staff", score=4321), pet(11, "Rex", 1))
+        )
+        assert problem is None
+        assert (users[0].group, users[0].achievement_score) == ("Cafe Staff", 4321)
+        assert (users[1].group, users[1].achievement_score) == ("", 0)
+
+    def test_group_and_score_ignored_when_the_tail_is_odd(self):
+        odd = player(10, "Odd", 0, group="Odd Group", score=99) + [77, "new field"]
+        users, _ = parse_users(users_packet(odd, player(11, "Ali", 1)))
+        assert (users[0].group, users[0].achievement_score) == ("", 0)
+
     def test_unknown_user_type_is_reported(self):
         entry = player(1, "X", 0)[:9] + [9]
         users, problem = parse_users(users_packet(entry))
@@ -143,6 +156,7 @@ class TestRoom:
             37,
         )
         assert han.motto == "|UN| GOV |"
+        assert (han.group, han.achievement_score) == ("<UN> Government [400k]", 8233)
 
     def test_documented_player_layout_still_parses(self):
         legacy = player(1, "Old", 0)[:-1]  # without the trailing int

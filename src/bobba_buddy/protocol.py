@@ -27,7 +27,7 @@ Attributes:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum, IntEnum
 
 from .gpython import HPacket
@@ -124,6 +124,8 @@ class RoomUser:
         kind: Player, pet or bot.
         x: Starting x tile.
         y: Starting y tile.
+        group: Players: the name of the group they show (their favourite), or ``""``.
+        achievement_score: Players: their achievement score (0 if unknown).
     """
 
     id: int
@@ -133,6 +135,8 @@ class RoomUser:
     kind: UserKind
     x: int = 0
     y: int = 0
+    group: str = ""
+    achievement_score: int = 0
 
 
 def _remaining(packet: HPacket) -> int:
@@ -314,8 +318,10 @@ def _read_entity_header(packet: HPacket) -> RoomUser | None:
     return RoomUser(uid, name, motto, index, UserKind(kind), x, y)
 
 
-def _skip_entity_tail(packet: HPacket, kind: UserKind, player_extra_ints: int = 1) -> None:
-    """Skip the type-specific fields after an entry's header.
+def _skip_entity_tail(
+    packet: HPacket, kind: UserKind, player_extra_ints: int = 1
+) -> tuple[str, int]:
+    """Read past the type-specific fields after an entry's header.
 
     Players: G-Rust's documented fields, then (live AIR client, MAC63-202610131318) one
     undocumented int, seen as -1.
@@ -326,6 +332,9 @@ def _skip_entity_tail(packet: HPacket, kind: UserKind, player_extra_ints: int = 
         player_extra_ints: Undocumented ints after a player's fields; 0 reads the
             documented layout.
 
+    Returns:
+        A player's group name and achievement score; ``("", 0)`` for anything else.
+
     Raises:
         ProtocolError: If the packet is truncated or a bot's skill count is absurd.
     """
@@ -334,12 +343,13 @@ def _skip_entity_tail(packet: HPacket, kind: UserKind, player_extra_ints: int = 
         _read_str(packet)
         _read_int(packet)
         _read_int(packet)
+        group = _read_str(packet)
         _read_str(packet)
-        _read_str(packet)
-        _read_int(packet)
+        score = _read_int(packet)
         _skip(packet, 1)
         _skip(packet, 4 * player_extra_ints)
-    elif kind is UserKind.PET:
+        return group, score
+    if kind is UserKind.PET:
         # sub type, owner id, owner name, rarity, 6 bools, level, posture
         _read_int(packet)
         _read_int(packet)
@@ -358,6 +368,7 @@ def _skip_entity_tail(packet: HPacket, kind: UserKind, player_extra_ints: int = 
             raise ProtocolError(f"implausible bot skill count {count}")
         _skip(packet, 2 * count)
     # OLD_BOT has no tail.
+    return "", 0
 
 
 def _header_at(packet: HPacket, offset: int) -> bool:
@@ -438,7 +449,7 @@ def parse_users(packet: HPacket) -> tuple[list[RoomUser], str | None]:
         for extra in (1, 0) if user.kind is UserKind.PLAYER else (0,):
             packet.read_index = tail_start
             try:
-                _skip_entity_tail(packet, user.kind, extra)
+                group, score = _skip_entity_tail(packet, user.kind, extra)
                 next_pos = packet.read_index
                 tail_ok = next_pos == end if last else _header_at(packet, next_pos)
             except ProtocolError:
@@ -446,6 +457,8 @@ def parse_users(packet: HPacket) -> tuple[list[RoomUser], str | None]:
             if tail_ok:
                 break
         if tail_ok:
+            if group or score:  # only trusted when the whole tail lined up
+                users[-1] = replace(user, group=group, achievement_score=max(score, 0))
             pos = next_pos
             continue
 

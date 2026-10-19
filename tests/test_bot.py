@@ -80,7 +80,7 @@ class Harness:
             "Users",
             pkt=users_packet(
                 player(100, OWNER, OWNER_IDX),
-                player(101, FRIEND, FRIEND_IDX, motto="pixel hoarder"),
+                player(101, FRIEND, FRIEND_IDX, motto="pixel hoarder", group="Cafe Staff"),
                 player(102, STRANGER, STRANGER_IDX),
                 pet(103, "Rex", PET_IDX),
             ),
@@ -293,6 +293,8 @@ class TestRoast:
         call = harness.responder.calls[0]
         assert 'Target name: "Friend"' in call["messages"][-1]["content"]
         assert 'Target motto: "pixel hoarder"' in call["messages"][-1]["content"]
+        assert 'Target group: "Cafe Staff"' in call["messages"][-1]["content"]
+        assert "Achievement score: 120" in call["messages"][-1]["content"]
         assert "roast" in call["system"].lower()
 
     def test_bare_roast_targets_asker(self, harness):

@@ -13,7 +13,7 @@ A G-Earth extension in Python for the Habbo AIR client. It answers whitelisted c
 | Command | What it does |
 |---|---|
 | `/q <question>` | Answers a question. Remembers your last few questions for 10 minutes and can search the web. |
-| `/roast [name]` | Gives a PG roast of someone in the room, based on their name and motto. With no name, it roasts you. |
+| `/roast [name]` | Roasts someone in the room with dry, deadpan sarcasm, using their group, achievement score, motto and name. Savage about what they chose, never about who they are. With no name, it roasts you. |
 | `/suggest <topic>` | Gives 2–3 quick ideas, e.g. `/suggest room theme for a cafe`. |
 | `/joke [topic]` | Tells one clean joke. |
 | `/q reset` | Forgets your `/q` history. |
@@ -303,7 +303,7 @@ uv run --no-project --with pymupdf python scripts/make_icons.py   # only when th
 
 Logs go to `logs/bobba-buddy.log` in the project folder (rotating, about 6 MB kept). The settings window's Extension Logs page shows the same lines live.
 
-**Versioning.** Current version: **1.6.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
+**Versioning.** Current version: **1.7.0**. Releases follow [semantic versioning](https://semver.org) and are tagged `vMAJOR.MINOR.PATCH` (for example `v1.0.0`). Bump the version in both `pyproject.toml` and `src/bobba_buddy/__init__.py`. G-Earth's Extensions list shows this version too, so rerun `scripts/install_gearth.py` after a bump. See [Version history](docs/MAIN_CONTENT.md#version-history).
 
 ## Troubleshooting
 

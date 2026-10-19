@@ -802,6 +802,8 @@ class BobbaBuddy:
                 today=self._today(),
                 target_name=target.name if target else None,
                 target_motto=target.motto if target else None,
+                target_group=target.group if target else None,
+                target_score=target.achievement_score if target else None,
             )
             history = self.memory.history(asker, cfg.memory.ttl_s) if spec.uses_memory else []
             log.debug(

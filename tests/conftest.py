@@ -74,7 +74,16 @@ def packet(*values: Any) -> HPacket:
     return HPacket(1, *values)
 
 
-def player(uid: int, name: str, index: int, motto: str = "", x: int = 3, y: int = 4) -> list[Any]:
+def player(
+    uid: int,
+    name: str,
+    index: int,
+    motto: str = "",
+    x: int = 3,
+    y: int = 4,
+    group: str = "",
+    score: int = 120,
+) -> list[Any]:
     """Flattened ``Users`` entry for a player (type 1) in the live AIR layout.
 
     That's G-Rust's documented fields plus a trailing undocumented int (-1).
@@ -86,6 +95,8 @@ def player(uid: int, name: str, index: int, motto: str = "", x: int = 3, y: int 
         motto: Motto.
         x: X tile.
         y: Y tile.
+        group: Favourite group's name.
+        score: Achievement score.
 
     Returns:
         The entry's payload values.
@@ -104,9 +115,9 @@ def player(uid: int, name: str, index: int, motto: str = "", x: int = 3, y: int 
         "M",
         0,
         0,
+        group,
         "",
-        "",
-        120,
+        score,
         False,
         -1,
     ]
